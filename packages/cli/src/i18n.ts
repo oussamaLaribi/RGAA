@@ -75,6 +75,27 @@ export interface Messages {
   criteriaReach: (reached: number, total: number, percent: number) => string;
   criteriaRest: string;
 
+  // errors the user sees
+  badLang: string;
+  badScore: string;
+  unknownCommand: (name: string) => string;
+  configMissing: (path: string) => string;
+  configNotJson: (path: string, why: string) => string;
+  configNotObject: (path: string) => string;
+  configUnknownKey: (key: string) => string;
+  configBadValue: (key: string) => string;
+  notAngular: (path: string) => string;
+  noBuildOutput: (path: string) => string;
+  noIndexHtml: (path: string) => string;
+  buildFailed: string;
+  browserLaunch: (channel: string) => string;
+  binNotFound: (name: string, path: string) => string;
+  guardDirty: (count: number) => string;
+  guardHow: string;
+  guardScan: string;
+  guardFix: string;
+  errorPrefix: (message: string) => string;
+
   // severities
   severity: Record<'critical' | 'serious' | 'moderate' | 'minor', string>;
 }
@@ -161,6 +182,30 @@ const FR: Messages = {
   criteriaRest:
     'Les autres exigent un humain. Aucun outil automatique ne peut établir la conformité RGAA.',
 
+  badLang: '--lang accepte fr ou en',
+  badScore: '--min-score doit être compris entre 0 et 100',
+  unknownCommand: (n) => `commande inconnue « ${n} »`,
+  configMissing: (p) => `fichier de configuration introuvable : ${p}`,
+  configNotJson: (p, w) => `${p} n'est pas du JSON valide : ${w}`,
+  configNotObject: (p) => `${p} doit contenir un objet JSON`,
+  configUnknownKey: (k) => `clé inconnue « ${k} » ignorée`,
+  configBadValue: (k) => `valeur invalide pour « ${k} » ignorée`,
+  notAngular: (p) => `${p} ne ressemble pas à un projet Angular : pas de angular.json`,
+  noBuildOutput: (p) => `aucune sortie de compilation dans ${p}`,
+  noIndexHtml: (p) => `aucun index.html sous ${p}`,
+  buildFailed:
+    "la compilation du projet a échoué. Vérifiez que « ng build » fonctionne avant d'analyser.",
+  browserLaunch: (c) =>
+    `impossible de lancer ${c}. Installez-le, ou passez --browser chromium après « npx playwright install chromium ».`,
+  binNotFound: (n, p) => `${n} introuvable dans ${p}. Les dépendances du projet sont-elles installées ?`,
+  guardDirty: (n) => `${n} fichier(s) ont des modifications non enregistrées :`,
+  guardHow:
+    'Enregistrez-les ou mettez-les de côté, ou passez --force pour continuer malgré tout.',
+  guardScan:
+    "Les templates sont réécrits pendant l'analyse puis restaurés, mais une exécution interrompue ne pourrait pas les remettre.",
+  guardFix: 'Ces correctifs réécrivent définitivement votre code source.',
+  errorPrefix: (m) => `erreur : ${m}`,
+
   severity: {
     critical: 'critique',
     serious: 'majeur',
@@ -232,6 +277,28 @@ const EN: Messages = {
     `${reached} of ${total} criteria can be reached by an automated check (${percent}%).`,
   criteriaRest:
     'The rest require a human. No automated tool can establish RGAA conformance.',
+
+  badLang: '--lang accepts fr or en',
+  badScore: '--min-score must be between 0 and 100',
+  unknownCommand: (n) => `unknown command "${n}"`,
+  configMissing: (p) => `configuration file not found: ${p}`,
+  configNotJson: (p, w) => `${p} is not valid JSON: ${w}`,
+  configNotObject: (p) => `${p} must contain a JSON object`,
+  configUnknownKey: (k) => `unknown key "${k}" ignored`,
+  configBadValue: (k) => `invalid value for "${k}" ignored`,
+  notAngular: (p) => `${p} does not look like an Angular project (no angular.json)`,
+  noBuildOutput: (p) => `no build output at ${p}`,
+  noIndexHtml: (p) => `no index.html under ${p}`,
+  buildFailed: "the project's own build failed. Check that \"ng build\" works before scanning.",
+  browserLaunch: (c) =>
+    `could not launch ${c}. Install it, or pass --browser chromium after running "npx playwright install chromium".`,
+  binNotFound: (n, p) => `could not find ${n} in ${p}. Are the project's dependencies installed?`,
+  guardDirty: (n) => `${n} file(s) have uncommitted changes:`,
+  guardHow: 'Commit or stash them, or pass --force to proceed anyway.',
+  guardScan:
+    'Templates are rewritten in place during a scan and restored afterwards, but an interrupted run could not put these back.',
+  guardFix: 'These fixes rewrite your source permanently.',
+  errorPrefix: (m) => `error: ${m}`,
 
   severity: {
     critical: 'critical',

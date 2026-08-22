@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_LANG, messages, parseLang } from './i18n.js';
 import { loadAxeLocale, loadRuleLocale } from './locales.js';
+import { usage } from './usage.js';
 
 describe('language selection', () => {
   it('defaults to French', () => {
@@ -44,6 +45,33 @@ describe('messages', () => {
   it('keeps the conformance caveat in both', () => {
     for (const lang of ['fr', 'en'] as const) {
       expect(messages(lang).disclaimer.join(' ')).toMatch(/audit humain|human audit/);
+    }
+  });
+});
+
+describe('usage text', () => {
+  it('follows the chosen language', () => {
+    // The help is the first thing many people read; leaving it in English under
+    // a French default was the last inconsistency of the translation pass.
+    expect(usage('fr')).toContain("analyse d'accessibilité");
+    expect(usage('en')).toContain('accessibility scan');
+  });
+
+  it('documents every option the parser accepts, in both languages', () => {
+    const options = [...usage('fr').matchAll(/^ {2}(--[a-z-]+)/gm)].map((m) => m[1]);
+    expect(options.length).toBeGreaterThan(15);
+
+    for (const option of options) {
+      expect(usage('en'), `${option} manque à la version anglaise`).toContain(option);
+    }
+  });
+
+  it('keeps the configuration keys untranslated', () => {
+    // They are the literal keys of the file, not prose: translating them would
+    // document a configuration that does not work.
+    for (const lang of ['fr', 'en'] as const) {
+      expect(usage(lang)).toContain('"routes"');
+      expect(usage(lang)).toContain('"minScore"');
     }
   });
 });

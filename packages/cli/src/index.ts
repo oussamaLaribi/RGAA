@@ -2,57 +2,9 @@
 import { parseArgs } from 'node:util';
 import { check, type CheckOptions } from './commands/check.js';
 import { criteria } from './commands/criteria.js';
-import { parseLang } from './i18n.js';
-import { CONFIG_FILENAME, loadConfig, pick, type Config } from './config.js';
-
-const USAGE = `
-rgaa-source — accessibility scan that reports the line of code, not a CSS selector
-
-Usage
-  rgaa-source check <url...>                 scan pages that are already served
-  rgaa-source check --project <dir>          instrument, build, serve and scan an Angular project
-  rgaa-source criteria                       show which RGAA criteria an automated check can reach
-
-Options
-  --project <dir>       Angular project to instrument and build
-  --route <path>        route to scan in project mode (repeatable, default /)
-  --min-score <n>       fail when a page scores below n
-  --fail                exit 1 on findings (the default outside a terminal, e.g. CI)
-  --no-fail             always exit 0, whatever is found
-  --lang <fr|en>        language of the output (default fr)
-  --json <file>         write the full results as JSON
-  --html <file>         write a self-contained report to hand over
-  --grid <file>         write the RGAA evaluation grid as CSV
-  --baseline <file>     compare against a reference run and fail only on what is new
-  --browser <channel>   Playwright channel (default msedge; pass chromium to use the download)
-  --violations-only     faster, but disables scoring
-  --reuse-build         serve the existing dist without instrumenting or building
-  --force               instrument even when the git tree is dirty
-  --verbose             list every occurrence, and stream the build output
-  --config <file>       read settings from this file instead of ./rgaa.config.json
-  --no-config           ignore any configuration file
-
-Fixing (project mode only)
-  --fix                 write the fixes that need no judgement
-  --fix-suggested       also draft the ones whose wording you must supply
-  --dry-run             show the diff and write nothing
-  -h, --help
-
-Exit codes
-  0  nothing found, or the gate passed
-  1  violations found, or the score is below --min-score
-  2  the scan itself could not run
-
-Configuration
-  Settings a project repeats can live in ${CONFIG_FILENAME}, next to package.json:
-
-    { "project": ".", "routes": ["/", "/contact"], "minScore": 80 }
-
-  A flag always wins over the file.
-
-Source locations only appear for pages built from instrumented templates. A scan
-of an arbitrary URL still reports violations, but cannot trace them to a file.
-`.trim();
+import { parseLang, messages, DEFAULT_LANG } from './i18n.js';
+import { usage } from './usage.js';
+import { loadConfig, pick, type Config } from './config.js';
 
 async function main(): Promise<number> {
   const { values, positionals } = parseArgs({
@@ -92,10 +44,18 @@ async function main(): Promise<number> {
 
   const [command, ...urls] = positionals;
 
+  // The flag alone decides the language for anything that can fail before the
+  // configuration file has been read — including reading it.
+  const langDrapeau = parseLang(values.lang);
+  if (langDrapeau === null) {
+    process.stderr.write(`${messages(DEFAULT_LANG).badLang}\n`);
+    return 2;
+  }
+
   const configPath = values.config;
   const loaded = values['no-config']
     ? { config: {} as Config, path: null, warnings: [] as string[] }
-    : loadConfig(process.cwd(), configPath);
+    : loadConfig(process.cwd(), messages(langDrapeau), configPath);
   const file = loaded.config;
 
   for (const warning of loaded.warnings) {
@@ -105,25 +65,26 @@ async function main(): Promise<number> {
   // Resolved before the dispatch: every command below speaks it.
   const lang = parseLang(values.lang ?? file.lang);
   if (lang === null) {
-    process.stderr.write('--lang accepte fr ou en\n');
+    process.stderr.write(`${messages(langDrapeau).badLang}\n`);
     return 2;
   }
+  const t = messages(lang);
 
   if (values.help || !command || command === 'help') {
-    process.stdout.write(`${USAGE}\n`);
+    process.stdout.write(`${usage(lang)}\n`);
     return values.help || command === 'help' ? 0 : 2;
   }
   if (command === 'criteria') return criteria(lang);
 
   if (command !== 'check') {
-    process.stderr.write(`unknown command "${command}"\n\n${USAGE}\n`);
+    process.stderr.write(`${t.unknownCommand(command)}\n\n${usage(lang)}\n`);
     return 2;
   }
 
   const rawScore = values['min-score'];
   const minScore = rawScore === undefined ? file.minScore : Number(rawScore);
   if (minScore !== undefined && (Number.isNaN(minScore) || minScore < 0 || minScore > 100)) {
-    process.stderr.write('--min-score doit être compris entre 0 et 100\n');
+    process.stderr.write(`${t.badScore}\n`);
     return 2;
   }
 
@@ -172,6 +133,14 @@ try {
 } catch (error) {
   // A bad flag must be a usage error with a message, not an unhandled rejection
   // that exits 1 and looks exactly like "violations were found".
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n\n${USAGE}\n`);
+  //
+  // The language is read straight off the arguments: this catches failures from
+  // before the parser ran, where nothing has been resolved yet.
+  const drapeau = process.argv.indexOf('--lang');
+  const lang = parseLang(drapeau === -1 ? undefined : process.argv[drapeau + 1]) ?? DEFAULT_LANG;
+
+  process.stderr.write(
+    `${error instanceof Error ? error.message : String(error)}\n\n${usage(lang)}\n`,
+  );
   process.exitCode = 2;
 }

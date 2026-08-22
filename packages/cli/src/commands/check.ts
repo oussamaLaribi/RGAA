@@ -81,7 +81,8 @@ async function applyFixes(
       options.project,
       plan.files.map((file) => file.absolutePath),
       options.force,
-      'These fixes rewrite your source permanently.',
+      messages(options.lang).guardFix,
+      { dirty: messages(options.lang).guardDirty, how: messages(options.lang).guardHow },
     );
   }
 
@@ -168,6 +169,12 @@ export async function check(options: CheckOptions): Promise<ExitCode> {
         reuseBuild: options.reuseBuild,
         onProgress: (message) => progress.step(message),
         labels: { instrumenting: t.instrumenting, building: t.building, serving: t.serving },
+        errors: {
+          notAngular: t.notAngular,
+          noBuildOutput: t.noBuildOutput,
+          noIndexHtml: t.noIndexHtml,
+          buildFailed: t.buildFailed,
+        },
         // The build is the long step and says plenty while it works; --verbose
         // lets it through so a slow project can be diagnosed rather than guessed at.
         ...(options.verbose
@@ -254,7 +261,7 @@ export async function check(options: CheckOptions): Promise<ExitCode> {
 
     return gate(results, options, comparison) ? 0 : 1;
   } catch (error) {
-    log(`error: ${error instanceof Error ? error.message : String(error)}`);
+    log(t.errorPrefix(error instanceof Error ? error.message : String(error)));
     return 2;
   } finally {
     progress.done();

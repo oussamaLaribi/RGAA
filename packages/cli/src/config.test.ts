@@ -3,6 +3,10 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONFIG_FILENAME, loadConfig, pick } from './config.js';
+import { messages, DEFAULT_LANG } from './i18n.js';
+
+/** The wording is injected so the loader carries no language of its own. */
+const t = messages(DEFAULT_LANG);
 
 let dir: string;
 
@@ -19,7 +23,7 @@ const write = (content: string, name = CONFIG_FILENAME): void => {
 
 describe('loadConfig', () => {
   it('treats a missing file as the normal case', () => {
-    const loaded = loadConfig(dir);
+    const loaded = loadConfig(dir, t);
 
     expect(loaded.config).toEqual({});
     expect(loaded.path).toBeNull();
@@ -29,7 +33,7 @@ describe('loadConfig', () => {
   it('reads the settings a project repeats', () => {
     write('{"project":".","routes":["/","/contact"],"minScore":80}');
 
-    expect(loadConfig(dir).config).toEqual({
+    expect(loadConfig(dir, t).config).toEqual({
       project: '.',
       routes: ['/', '/contact'],
       minScore: 80,
@@ -40,7 +44,7 @@ describe('loadConfig', () => {
     // A mistyped key quietly dropped is how someone spends an afternoon
     // wondering why their setting does nothing.
     write('{"projet":"."}');
-    const loaded = loadConfig(dir);
+    const loaded = loadConfig(dir, t);
 
     expect(loaded.config).toEqual({});
     expect(loaded.warnings[0]).toContain('projet');
@@ -48,7 +52,7 @@ describe('loadConfig', () => {
 
   it('warns about a value of the wrong shape', () => {
     write('{"minScore":"quatre-vingts","routes":"/"}');
-    const loaded = loadConfig(dir);
+    const loaded = loadConfig(dir, t);
 
     expect(loaded.config).toEqual({});
     expect(loaded.warnings).toHaveLength(2);
@@ -56,12 +60,12 @@ describe('loadConfig', () => {
 
   it('refuses a score outside 0..100', () => {
     write('{"minScore":140}');
-    expect(loadConfig(dir).warnings[0]).toContain('minScore');
+    expect(loadConfig(dir, t).warnings[0]).toContain('minScore');
   });
 
   it('accepts the conventional comment keys', () => {
     write('{"$schema":"...","//":"une note","project":"."}');
-    const loaded = loadConfig(dir);
+    const loaded = loadConfig(dir, t);
 
     expect(loaded.config).toEqual({ project: '.' });
     expect(loaded.warnings).toEqual([]);
@@ -71,19 +75,19 @@ describe('loadConfig', () => {
     // Unlike a missing file, a broken one is a mistake its author wants to hear
     // about rather than have quietly ignored.
     write('{ not json');
-    expect(() => loadConfig(dir)).toThrow(/JSON valide/);
+    expect(() => loadConfig(dir, t)).toThrow(/JSON valide/);
   });
 
   it('refuses anything that is not an object', () => {
     write('["a"]');
-    expect(() => loadConfig(dir)).toThrow(/objet JSON/);
+    expect(() => loadConfig(dir, t)).toThrow(/objet JSON/);
   });
 
   it('reads a file named explicitly, and says so when it is absent', () => {
     write('{"project":"ailleurs"}', 'autre.json');
 
-    expect(loadConfig(dir, 'autre.json').config.project).toBe('ailleurs');
-    expect(() => loadConfig(dir, 'absent.json')).toThrow(/introuvable/);
+    expect(loadConfig(dir, t, 'autre.json').config.project).toBe('ailleurs');
+    expect(() => loadConfig(dir, t, 'absent.json')).toThrow(/introuvable/);
   });
 });
 

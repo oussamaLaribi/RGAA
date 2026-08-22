@@ -42,13 +42,18 @@ async function findTemplates(sourceRoot: string): Promise<string[]> {
 }
 
 /** Locate the build output, which Angular writes to `dist/<project>/browser`. */
-async function findBuildOutput(projectRoot: string): Promise<string> {
+async function findBuildOutput(
+  projectRoot: string,
+  errors?: PrepareOptions['errors'],
+): Promise<string> {
   const distRoot = join(projectRoot, 'dist');
-  if (!(await exists(distRoot))) throw new Error(`no build output at ${distRoot}`);
+  if (!(await exists(distRoot))) {
+    throw new Error(errors?.noBuildOutput(distRoot) ?? `no build output at ${distRoot}`);
+  }
 
   const entries = await readdir(distRoot, { withFileTypes: true, recursive: true });
   const shell = entries.find((entry) => entry.isFile() && entry.name === 'index.html');
-  if (!shell) throw new Error(`no index.html under ${distRoot}`);
+  if (!shell) throw new Error(errors?.noIndexHtml(distRoot) ?? `no index.html under ${distRoot}`);
 
   return shell.parentPath;
 }
@@ -60,6 +65,13 @@ export interface PrepareOptions {
   onProgress?: (message: string) => void;
   /** Wording for the three steps, so the driver says nothing in a fixed language. */
   labels?: { instrumenting: (count: number) => string; building: string; serving: (origin: string) => string };
+  /** Wording for the errors this driver raises, for the same reason. */
+  errors?: {
+    notAngular: (path: string) => string;
+    noBuildOutput: (path: string) => string;
+    noIndexHtml: (path: string) => string;
+    buildFailed: string;
+  };
   /** Echo the build output as it arrives. */
   onBuildOutput?: (chunk: string) => void;
 }
@@ -80,7 +92,10 @@ export async function prepareProject(
   const report = options.onProgress ?? ((): void => {});
 
   if (!(await exists(join(root, 'angular.json')))) {
-    throw new Error(`${root} does not look like an Angular project (no angular.json)`);
+    throw new Error(
+      options.errors?.notAngular(root) ??
+        `${root} does not look like an Angular project (no angular.json)`,
+    );
   }
 
   let session: InstrumentationSession | null = null;
@@ -120,7 +135,7 @@ export async function prepareProject(
         const details = error as { stdout?: string; stderr?: string };
         const output = `${details.stdout ?? ''}${details.stderr ?? ''}`.trim();
         throw new Error(
-          `the project's own build failed. Check that "ng build" works before scanning.\n\n${output}`,
+          `${options.errors?.buildFailed ?? "the project's own build failed."}\n\n${output}`,
         );
       }
     } finally {
@@ -130,7 +145,7 @@ export async function prepareProject(
     }
   }
 
-  const site = await serveDirectory(await findBuildOutput(root));
+  const site = await serveDirectory(await findBuildOutput(root, options.errors));
   report(options.labels?.serving(site.origin) ?? `serving ${site.origin}`);
 
   return {

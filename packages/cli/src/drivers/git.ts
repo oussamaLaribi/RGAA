@@ -13,6 +13,8 @@ export async function assertRecoverable(
   files: readonly string[],
   force: boolean,
   reason: string,
+  /** Wording, so this guard names no language of its own. */
+  wording: { dirty: (count: number) => string; how: string },
 ): Promise<void> {
   if (force || files.length === 0) return;
 
@@ -49,10 +51,10 @@ export async function assertRecoverable(
 
   if (dirty.length > 0) {
     throw new Error(
-      `${dirty.length} file(s) have uncommitted changes:\n` +
+      `${wording.dirty(dirty.length)}\n` +
         // Trimmed only for display; the status columns were needed above.
         dirty.map((line) => `  ${line.trim()}`).join('\n') +
-        `\n\n${reason} Commit or stash them, or pass --force to proceed anyway.`,
+        `\n\n${reason} ${wording.how}`,
     );
   }
 }

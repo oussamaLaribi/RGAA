@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
-import type { Lang } from './i18n.js';
+import type { Lang, Messages } from './i18n.js';
 
 /** Looked for in the working directory unless `--config` names another file. */
 export const CONFIG_FILENAME = 'rgaa.config.json';
@@ -68,7 +68,7 @@ const SHAPE: Record<keyof Config, Validator> = {
  * that exists but cannot be parsed does throw, because that is a mistake the
  * author wants to hear about rather than have quietly ignored.
  */
-export function loadConfig(cwd: string, explicitPath?: string): LoadedConfig {
+export function loadConfig(cwd: string, t: Messages, explicitPath?: string): LoadedConfig {
   const path = explicitPath
     ? isAbsolute(explicitPath)
       ? explicitPath
@@ -79,7 +79,7 @@ export function loadConfig(cwd: string, explicitPath?: string): LoadedConfig {
   try {
     raw = readFileSync(path, 'utf8');
   } catch {
-    if (explicitPath) throw new Error(`fichier de configuration introuvable : ${path}`);
+    if (explicitPath) throw new Error(t.configMissing(path));
     return { config: {}, path: null, warnings: [] };
   }
 
@@ -87,11 +87,11 @@ export function loadConfig(cwd: string, explicitPath?: string): LoadedConfig {
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    throw new Error(`${path} n'est pas du JSON valide : ${(error as Error).message}`);
+    throw new Error(t.configNotJson(path, (error as Error).message));
   }
 
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error(`${path} doit contenir un objet JSON`);
+    throw new Error(t.configNotObject(path));
   }
 
   const config: Config = {};
@@ -103,11 +103,11 @@ export function loadConfig(cwd: string, explicitPath?: string): LoadedConfig {
 
     const validate = SHAPE[key as keyof Config];
     if (!validate) {
-      warnings.push(`clé inconnue « ${key} » ignorée`);
+      warnings.push(t.configUnknownKey(key));
       continue;
     }
     if (!validate(value)) {
-      warnings.push(`valeur invalide pour « ${key} » ignorée`);
+      warnings.push(t.configBadValue(key));
       continue;
     }
     (config as Record<string, unknown>)[key] = value;
