@@ -64,6 +64,13 @@ export interface Messages {
    */
   fixDescriptions: Readonly<Record<string, string>>;
 
+  // baseline comparison
+  regressionTitle: string;
+  regressionNone: string;
+  regressionNew: (count: number) => string;
+  regressionResolved: (count: number) => string;
+  regressionCarried: (count: number) => string;
+
   // criteria command
   criteriaReach: (reached: number, total: number, percent: number) => string;
   criteriaRest: string;
@@ -143,6 +150,12 @@ const FR: Messages = {
     'heading-order': 'ramener le titre au niveau suivant',
   },
 
+  regressionTitle: 'Comparaison à la référence',
+  regressionNone: 'aucune anomalie nouvelle',
+  regressionNew: (n) => `${n} anomalie(s) nouvelle(s)`,
+  regressionResolved: (n) => `${n} corrigée(s) depuis la référence`,
+  regressionCarried: (n) => `${n} anomalie(s) déjà présente(s) dans la référence`,
+
   criteriaReach: (reached, total, percent) =>
     `${reached} critères sur ${total} sont atteignables par un contrôle automatique (${percent} %).`,
   criteriaRest:
@@ -205,6 +218,12 @@ const EN: Messages = {
   fixNoFixer: (rules) => `no automated fix for: ${rules}`,
   fixUntraceable: (n) =>
     `${n} violation(s) were never traced to a file and cannot be edited`,
+
+  regressionTitle: 'Compared to the reference',
+  regressionNone: 'nothing newly introduced',
+  regressionNew: (n) => `${n} newly introduced`,
+  regressionResolved: (n) => `${n} fixed since the reference`,
+  regressionCarried: (n) => `${n} already present in the reference`,
 
   // Empty: the fixers already carry their English wording.
   fixDescriptions: {},

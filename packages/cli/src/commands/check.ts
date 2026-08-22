@@ -129,7 +129,7 @@ async function emit(
   }
 
   const comparison = compareToBaseline(results, recorded);
-  process.stdout.write(`${formatRegressionReport(comparison)}\n`);
+  process.stdout.write(`${formatRegressionReport(comparison, options.lang)}\n`);
   return comparison;
 }
 
