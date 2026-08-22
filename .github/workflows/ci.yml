@@ -5,6 +5,12 @@ on:
   push:
     branches: [main, master]
 
+# Declared explicitly rather than left to the repository default, which an
+# organisation setting can widen without anyone noticing. This workflow only
+# needs to read the code: it publishes nothing and comments nowhere.
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
