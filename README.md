@@ -320,9 +320,14 @@ Version **0.1.0**, première publication. Le pont — la localisation d'une
 violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
 compilation Angular réelle, et validé sur deux projets open source.
 
-**Testé sur Angular 21 et 22.** L'analyse des templates s'appuie sur le
-compilateur d'Angular 22 : une syntaxe de template plus récente qu'elle
-demanderait une mise à jour de ce paquet.
+**Testé sur Angular 17, 19, 21 et 22** — mêmes lignes, mêmes colonnes, même
+score sur les quatre. L'analyse des templates s'appuie sur le compilateur
+d'Angular 22, installé à côté du vôtre sans interférer avec lui : une syntaxe de
+template plus récente que la v22 demanderait une mise à jour de ce paquet.
+
+Angular 17 est le plancher retenu parce que c'est la version qui a introduit
+`@if` et `@for`. Sur une version antérieure, l'outil devrait fonctionner mais
+n'a pas été vérifié.
 
 ### Limites connues
 

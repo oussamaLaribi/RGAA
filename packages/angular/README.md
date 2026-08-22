@@ -20,6 +20,12 @@ C'est l'équivalent Angular de `babel-plugin-transform-react-jsx-source`
   `node_modules/.cache/rgaa-restore/` ; un processus tué entre l'écriture et la
   restauration est récupéré au lancement suivant.
 
+## Compatibilité
+
+Vérifié sur **Angular 17, 19, 21 et 22**. Le compilateur d'Angular 22 sert à
+analyser les templates ; npm l'installe à côté de celui de votre projet sans
+interférer avec lui — vérifié sur un projet Angular 17, qui conserve le sien.
+
 ## Usage
 
 ```ts
