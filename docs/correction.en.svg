@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1011" height="424"
+     viewBox="0 0 1011 424" role="img" aria-labelledby="titre description">
+  <title id="titre">Proposed fixes, shown as a diff before anything is written to the code</title>
+  <desc id="description">28 +   &lt;h2&gt;Sous-titre saute un niveau&lt;/h2&gt; — 29   &lt;/main&gt; — src/index.html — 3:1  rgaa-lang-mismatch — correct the declared language to the one detected — 6:3  rgaa-placeholder-page-title — replace the placeholder title — 8:3  meta-viewport — allow zooming again — 2   &lt;!-- lang=&quot;en&quot; is what `ng new` writes; French teams routinely ship it untouched. --&gt; — 3 - &lt;html lang=&quot;en&quot;&gt; — 3 + &lt;html lang=&quot;fr&quot;&gt; — 4   &lt;head&gt; — 5     &lt;meta charset=&quot;utf-8&quot;&gt; — 6 -   &lt;title&gt;Document&lt;/title&gt; — 6 +   &lt;title&gt;TODO-a11y&lt;/title&gt; — 7     &lt;base href=&quot;/&quot;&gt; — 8 -   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no&quot;&gt; — 8 +   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt; — 9     &lt;link rel=&quot;icon&quot; type=&quot;image/x-icon&quot; href=&quot;favicon.ico&quot;&gt;</desc>
+  <rect width="1011" height="424" rx="8" fill="#22272e"/>
+  <circle cx="24" cy="22" r="6" fill="#e5534b"/>
+  <circle cx="44" cy="22" r="6" fill="#c69026"/>
+  <circle cx="64" cy="22" r="6" fill="#57ab5a"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5">
+<text x="18.0" y="46" fill="#57ab5a" xml:space="preserve">      28 +   &lt;h2&gt;Sous-titre saute un niveau&lt;/h2&gt;</text>
+<text x="18.0" y="66" fill="#768390" xml:space="preserve">      29   &lt;/main&gt;</text>
+
+<text x="18.0" y="106" fill="#adbac7" xml:space="preserve">  </text><text x="34.8" y="106" fill="#adbac7" font-weight="600" xml:space="preserve">src/index.html</text>
+<text x="18.0" y="126" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="126" fill="#768390" xml:space="preserve">3:1</text><text x="76.8" y="126" fill="#adbac7" xml:space="preserve">  rgaa-lang-mismatch — correct the declared language to the one detected</text>
+<text x="18.0" y="146" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="146" fill="#768390" xml:space="preserve">6:3</text><text x="76.8" y="146" fill="#adbac7" xml:space="preserve">  rgaa-placeholder-page-title — replace the placeholder title</text>
+<text x="18.0" y="166" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="166" fill="#768390" xml:space="preserve">8:3</text><text x="76.8" y="166" fill="#adbac7" xml:space="preserve">  meta-viewport — allow zooming again</text>
+<text x="18.0" y="186" fill="#768390" xml:space="preserve">       2   &lt;!-- lang=&quot;en&quot; is what `ng new` writes; French teams routinely ship it untouched. --&gt;</text>
+<text x="18.0" y="206" fill="#e5534b" xml:space="preserve">       3 - &lt;html lang=&quot;en&quot;&gt;</text>
+<text x="18.0" y="226" fill="#57ab5a" xml:space="preserve">       3 + &lt;html lang=&quot;fr&quot;&gt;</text>
+<text x="18.0" y="246" fill="#768390" xml:space="preserve">       4   &lt;head&gt;</text>
+<text x="18.0" y="266" fill="#768390" xml:space="preserve">       5     &lt;meta charset=&quot;utf-8&quot;&gt;</text>
+<text x="18.0" y="286" fill="#e5534b" xml:space="preserve">       6 -   &lt;title&gt;Document&lt;/title&gt;</text>
+<text x="18.0" y="306" fill="#57ab5a" xml:space="preserve">       6 +   &lt;title&gt;TODO-a11y&lt;/title&gt;</text>
+<text x="18.0" y="326" fill="#768390" xml:space="preserve">       7     &lt;base href=&quot;/&quot;&gt;</text>
+<text x="18.0" y="346" fill="#e5534b" xml:space="preserve">       8 -   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no&quot;&gt;</text>
+<text x="18.0" y="366" fill="#57ab5a" xml:space="preserve">       8 +   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</text>
+<text x="18.0" y="386" fill="#768390" xml:space="preserve">       9     &lt;link rel=&quot;icon&quot; type=&quot;image/x-icon&quot; href=&quot;favicon.ico&quot;&gt;</text>
+  </g>
+</svg>

@@ -1,372 +1,372 @@
-# Accessibilité RGAA — du DOM au code source
+**English** · [Français](README.fr.md)
 
-Analyse RGAA pour projets **Angular** qui rapporte **la ligne de code**, pas un
-sélecteur CSS.
+# Accessibility for Angular — from the DOM to the source line
 
-## Démarrage
+Accessibility scanning for **Angular** projects that reports **the line of code**,
+not a CSS selector.
+
+## Quick start
 
 ```bash
 npm install -D @rgaa-source/cli
 npx rgaa-source check --project .
 ```
 
-![Résultat d'une analyse : chaque violation est listée avec son fichier, sa ligne
-et sa colonne, sa gravité, la règle en cause et les critères RGAA
-concernés.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/analyse.svg)
+![Scan output: every violation with its file, its line and column, its severity,
+the rule behind it and the RGAA criteria it bears
+on.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/analyse.en.svg)
 
-Un seul prérequis : **votre projet doit compiler**. L'outil instrumente vos
-templates puis lance `ng build`, donc si `npx ng build` échoue déjà, commencez
-par là. Il faut aussi un navigateur pour Playwright — sous Windows il pilote
-l'Edge déjà installé ; ailleurs, `npx playwright install chromium` puis
+One prerequisite: **your project must build**. The tool instruments your
+templates and then runs `ng build`, so if `npx ng build` already fails, start
+there. Playwright also needs a browser — on Windows it drives the Edge you
+already have; elsewhere, `npx playwright install chromium` then
 `--browser chromium`.
 
-Comptez de vingt secondes à quelques minutes : la compilation de votre projet
-domine le temps d'exécution, et l'avancement s'affiche pendant.
+Expect twenty seconds to a few minutes: your own build dominates the runtime, and
+progress is shown while it works.
 
-Pour ne pas retaper les mêmes options, un `rgaa.config.json` à côté du
-`package.json` :
+To stop repeating the same options, put an `rgaa.config.json` next to your
+`package.json`:
 
 ```json
 { "project": ".", "routes": ["/", "/contact"], "minScore": 80 }
 ```
 
-Un drapeau l'emporte toujours sur le fichier. `--no-config` l'ignore.
+A flag always beats the file. `--no-config` ignores it entirely.
 
 ---
 
-Outillage d'accessibilité pour les projets **Angular**, qui répond à la question
-qu'aucun scanner existant ne traite : **quelle ligne de mon code produit cette
-violation ?**
+## What RGAA is, if you have not met it
 
-Les outils actuels (axe DevTools, Lighthouse, WAVE, et côté français RGAA Lab,
-Assistant RGAA, Tanaguru) s'arrêtent à un sélecteur CSS du type
-`body > main > form > input.email`, qui ne correspond à aucun fichier ouvrable.
-Ici, une violation détectée dans la page rendue **porte sa propre adresse
-source** :
+**RGAA 4.1.2** is the French accessibility reference frame — the national
+implementation of WCAG 2.1 AA, expressed as 106 auditable criteria across 13
+topics, with an official audit grid and a published methodology.
+
+It matters beyond France. The **European Accessibility Act** has applied since
+28 June 2025 across the Union, conformity is demonstrated through EN 301 549, and
+RGAA is how France instantiates it. Penalties in France reach €50,000 per
+service, and the first inspections began in January 2026.
+
+If you have no RGAA obligation, the tool is still useful: it runs **axe-core**,
+so everything it finds is a WCAG problem first. The RGAA mapping and the audit
+grid are simply extra output you can ignore.
+
+## The problem this solves
+
+Existing tools — axe DevTools, Lighthouse, WAVE, and on the French side RGAA Lab,
+Assistant RGAA, Tanaguru — stop at a CSS selector like
+`body > main > form > input.email`. That selector matches no file you can open,
+and finding the template that produced it is the slow, manual, untooled part of
+the job.
+
+Here, a violation found in the rendered page **carries its own source address**:
 
 ```
-image sans alternative textuelle   src/app/checkout/checkout.component.html:42:8
-bouton sans nom accessible         src/app/shared/icon-button.component.html:7:3
+image without a text alternative   src/app/checkout/checkout.component.html:42:8
+button without an accessible name  src/app/shared/icon-button.component.html:7:3
 ```
 
-## Comment le pont fonctionne
+## How the bridge works
 
-`@rgaa-source/angular` réécrit les templates avant le build pour poser sur chaque
-élément rendu l'attribut `data-a11y-src="fichier:ligne:colonne"`, aux offsets
-que le compilateur Angular a lui-même rapportés (`parseTemplate` → `sourceSpan`).
-La réécriture est une pure insertion de texte : l'AST n'est jamais re-sérialisé,
-donc le formatage, les bindings et la syntaxe de contrôle de flux survivent
-intacts.
+`@rgaa-source/angular` rewrites your templates before the build, putting a
+`data-a11y-src="file:line:column"` attribute on every rendered element, at the
+offsets Angular's own compiler reported (`parseTemplate` → `sourceSpan`).
 
-À l'exécution, une violation lit sa localisation sur le nœud fautif. **Le
-résultat est exact ou absent, jamais deviné** — un développeur envoyé à la
-mauvaise ligne perd plus de temps qu'un développeur envoyé nulle part.
+The rewrite is **pure text insertion**: the AST is never re-serialised, so your
+formatting, bindings and control-flow syntax survive untouched.
 
-C'est l'équivalent Angular de `babel-plugin-transform-react-jsx-source`
-(`_debugSource`) côté React, qui n'existait pas jusqu'ici.
+At runtime, a violation reads its location off the offending node. **The result
+is exact or absent, never guessed** — a developer sent to the wrong line loses
+more time than a developer sent nowhere at all.
 
-## Paquets
+This is the Angular equivalent of what
+`babel-plugin-transform-react-jsx-source` (`_debugSource`) gives React, which
+did not exist here until now.
 
-| Paquet | Rôle |
+## Packages
+
+| Package | Role |
 |---|---|
-| `@rgaa-source/core` | Types, interface de règle, moteur axe-core, mapping WCAG ↔ RGAA, scoring. TypeScript pur, sans dépendance framework : le même moteur tourne en CLI, sous Playwright, dans une extension. |
-| `@rgaa-source/angular` | Le pont. Analyse et réécriture des templates Angular, cycle de vie de l'instrumentation. |
-| `@rgaa-source/report` | Rapport HTML autonome, grille d'évaluation RGAA, comparaison à une référence. |
-| `@rgaa-source/fix` | Correctifs appliqués aux positions sources, classés par le jugement qu'ils exigent. |
-| `@rgaa-source/cli` | Les commandes `rgaa-source check` et `rgaa-source criteria` : Playwright, orchestration du build, rapports. |
+| `@rgaa-source/core` | Types, rule interface, axe-core engine, WCAG ↔ RGAA mapping, scoring. Pure TypeScript with no framework dependency: the same engine runs in the CLI, under Playwright, or in an extension. |
+| `@rgaa-source/angular` | The bridge. Angular template parsing and rewriting, and the instrumentation lifecycle. |
+| `@rgaa-source/report` | Self-contained HTML report, RGAA audit grid, baseline comparison. |
+| `@rgaa-source/fix` | Fixes applied at source positions, graded by the judgement they demand. |
+| `@rgaa-source/cli` | The `rgaa-source check` and `rgaa-source criteria` commands: Playwright, build orchestration, reporting. |
 
-## Utilisation
+## Usage
 
 ```bash
-rgaa-source check --project ./mon-app          # instrumente, compile, sert et analyse
-rgaa-source check https://example.com          # analyse une page déjà servie
-rgaa-source criteria                           # ce que le moteur peut couvrir du RGAA
+rgaa-source check --project ./my-app          # instrument, build, serve and scan
+rgaa-source check https://example.com         # scan an already-served page
+rgaa-source criteria                          # what the engine can reach of RGAA
 ```
 
-Sur un projet, chaque violation sort avec son fichier, sa ligne et les critères
-RGAA concernés :
+On a project, every violation comes out with its file, its line and the RGAA
+criteria it bears on:
 
-![Résumé d'une analyse : score de pré-audit, répartition par gravité, nombre de
-critères RGAA examinés, en échec et à vérifier, et surtout le nombre de critères
-hors de portée de tout contrôle automatique.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/couverture.svg)
+![Scan summary: pre-audit score, breakdown by severity, how many RGAA criteria
+were examined, failed and need checking, and above all how many are out of reach
+of any automated
+check.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/couverture.en.svg)
 
-Options principales : `--route` (répétable), `--min-score`, `--json`, `--html`,
+Main options: `--route` (repeatable), `--min-score`, `--json`, `--html`,
 `--grid`, `--baseline`, `--browser`, `--reuse-build`, `--force`, `--verbose`,
-`--violations-only` (plus rapide, mais désactive le score), `--config`,
-`--no-config`. `rgaa-source --help` les liste toutes.
+`--violations-only` (faster, but disables scoring), `--config`, `--no-config`.
+`rgaa-source --help` lists them all.
 
-### Fichier de configuration
+### Configuration file
 
-`rgaa.config.json`, à côté du `package.json` :
+`rgaa.config.json`, next to your `package.json`:
 
 ```json
 {
   "project": ".",
   "routes": ["/", "/contact"],
   "minScore": 80,
-  "html": "rapport.html",
-  "grid": "grille.csv",
-  "lang": "fr"
+  "html": "report.html",
+  "grid": "grid.csv",
+  "lang": "en"
 }
 ```
 
-Du JSON et non du JavaScript : un fichier de configuration qui exécute du code
-est un fichier que votre CI exécute, et rien ici n'a besoin de ce pouvoir.
+JSON and not JavaScript: a configuration file that executes code is a file your
+CI executes, and nothing here needs that power.
 
-**Ce qui va où.** Le fichier porte ce qui appartient au *projet* — routes, seuil,
-langue, livrables : ce sont des propriétés de l'application, vraies partout. Les
-drapeaux portent ce qui appartient à l'*exécution* — `--browser chromium` parce
-que le runner n'a pas Edge, `--dry-run` parce que vous explorez.
+**What goes where.** The file carries what belongs to the *project* — routes,
+threshold, language, deliverables: these are properties of the application, true
+everywhere. Flags carry what belongs to the *run* — `--browser chromium` because
+the runner has no Edge, `--dry-run` because you are exploring.
 
-C'est ce partage qui garde une exécution locale et la CI identiques. Des réglages
-qui ne vivent que dans un fichier de workflow divergent en silence de ce que
-lancent les développeurs, et la barrière devient le « ça passait chez moi » que
-personne ne sait trancher. Commité, le fichier fait apparaître un changement de
-seuil en revue de code.
+That split is what keeps a local run and CI identical. Settings that live only in
+a workflow file drift silently from what developers run, and the gate becomes the
+"it passed on my machine" nobody can settle. Committed, the file makes a
+threshold change visible in code review.
 
-Un drapeau l'emporte toujours sur le fichier, et `--no-config` l'ignore
-entièrement. Une clé inconnue ou une valeur du mauvais type est **signalée puis
-ignorée** — une clé mal orthographiée avalée en silence est ce qui fait perdre
-un après-midi. Un fichier illisible, en revanche, arrête l'exécution : c'est une
-erreur que son auteur veut connaître.
+A flag always beats the file, and `--no-config` ignores it entirely. An unknown
+key or a value of the wrong shape is **reported and then ignored** — a
+misspelled key swallowed in silence is how someone loses an afternoon. An
+unreadable file, by contrast, stops the run: that is a mistake its author wants
+to hear about.
 
-**La sortie est en français**, y compris les messages d'axe-core, repris de sa
-traduction officielle. `--lang en` pour l'anglais. Tout est traduit dans la page
-avant production, donc la console, le rapport HTML, la grille et le JSON parlent
-la même langue sans double traduction.
+**Output defaults to French**, including axe-core's messages, taken from its
+official translation. Use `--lang en` for English. Everything is translated in
+the page before results are produced, so the console, the HTML report, the grid
+and the JSON all speak one language with no double translation.
 
-**Le code de sortie dépend du contexte.** Dans un terminal, l'analyse rapporte et
-sort en 0 : un humain qui explore un projet existant lit un code 1 comme un
-plantage. Hors terminal — en intégration continue — elle bloque sur ce qu'elle
-trouve. `--fail` et `--no-fail` forcent l'un ou l'autre, et le rapport indique
-lui-même quand une exécution aurait échoué en CI.
+**The exit code depends on context.** In a terminal, the scan reports and exits
+0: a human exploring an existing codebase reads exit 1 as a crash. Outside a
+terminal — in CI — it blocks on what it finds. `--fail` and `--no-fail` force
+either behaviour, and the report says when a run would have failed in CI.
 
-## Correction
+## Fixing
 
 ```bash
-rgaa-source check --project ./mon-app --fix              # écrit ce qui ne demande aucun jugement
-rgaa-source check --project ./mon-app --fix-suggested    # rédige aussi ce dont vous devrez écrire les mots
-rgaa-source check --project ./mon-app --fix --dry-run    # montre le diff, n'écrit rien
+rgaa-source check --project ./my-app --fix              # writes what needs no judgement
+rgaa-source check --project ./my-app --fix-suggested    # also drafts what you must word yourself
+rgaa-source check --project ./my-app --fix --dry-run    # shows the diff, writes nothing
 ```
 
-![Correctifs proposés : chacun est listé avec sa ligne et ce qu'il fait, suivi du
-diff exact que la commande écrirait dans le fichier.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/correction.svg)
+![Proposed fixes: each listed with its line and what it does, followed by the
+exact diff the command would write to the
+file.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/correction.en.svg)
 
-Le plan complet est **toujours affiché en diff avant d'écrire**. Modifier
-automatiquement le code de quelqu'un n'est acceptable que s'il peut tout relire
-d'abord ; un compteur « 12 corrections appliquées » n'est pas relisible.
+The full plan is **always shown as a diff before anything is written**. Editing
+someone's code automatically is only acceptable if they can read all of it first;
+a "12 fixes applied" counter is not readable.
 
-Les correctifs sont classés par le jugement qu'ils exigent :
+Fixes are graded by the judgement they demand:
 
-| Niveau | Signification | Appliqué |
+| Level | Meaning | Applied |
 |---|---|---|
-| **Sûr** | Mécaniquement certain sans rien savoir du sens de la page : retirer un `tabindex` positif, réautoriser le zoom. | par `--fix` |
-| **Suggéré** | La forme est connue, les mots non : `alt`, `aria-label`, titre de page, niveau de titre. Écrit un marqueur `TODO-a11y`. | par `--fix-suggested` |
-| **Manuel** | Contraste, ordre de focus, pertinence sémantique. Signalé, jamais écrit. | jamais |
+| **Safe** | Mechanically certain without knowing anything about the page's meaning: removing a positive `tabindex`, re-enabling zoom. | by `--fix` |
+| **Suggested** | The shape is known, the words are not: `alt`, `aria-label`, page title, heading level. Writes a `TODO-a11y` marker. | by `--fix-suggested` |
+| **Manual** | Contrast, focus order, semantic relevance. Reported, never written. | never |
 
-Cette liste des correctifs sûrs est courte, et c'est volontaire. La plupart des
-corrections d'accessibilité consistent à **écrire un texte qui décrit quelque
-chose**, et aucun outil ne sait ce que montre une image ni ce que fait un bouton.
-Une alternative fausse est pire que l'attribut manquant : le lecteur d'écran la
-croit, alors qu'une alternative absente reste détectable.
+The list of safe fixes is short, and that is deliberate. Most accessibility fixes
+consist of **writing text that describes something**, and no tool knows what an
+image shows or what a button does. A wrong alternative is worse than a missing
+one: a screen reader believes it, whereas an absent alternative stays detectable.
 
-Écrire dans les sources est définitif : la commande refuse de toucher un fichier
-dont la copie de travail diffère de l'index, où git ne pourrait rien rendre.
-Une modification déjà indexée ne bloque pas — son contenu est récupérable.
+Writing to sources is final, so the command refuses to touch a file whose working
+copy differs from the index, where git could give nothing back. An
+already-staged change does not block — its content is recoverable.
 
-## Livrables
+## Deliverables
 
 ```bash
-rgaa-source check --project ./mon-app --html rapport.html --grid grille.csv
+rgaa-source check --project ./my-app --html report.html --grid grid.csv
 ```
 
-Le **rapport HTML** est autonome : aucune feuille de style externe, aucun script,
-aucun appel réseau. Il doit encore s'ouvrir correctement depuis une pièce jointe
-dans deux ans.
+The **HTML report** is self-contained: no external stylesheet, no script, no
+network call. It must still open correctly from an email attachment in two years.
 
-La **grille** reprend les colonnes exactes du modèle d'évaluation officiel —
-Thématique, Critère, Recommandation, Statut, Dérogation, Modifications à apporter,
-Commentaires — pour les 106 critères, en CSV séparé par des points-virgules et
-préfixé d'un BOM, faute de quoi Excel en locale française affiche les intitulés
-accentués en charabia.
+The **grid** uses the exact columns of the official evaluation template — Topic,
+Criterion, Recommendation, Status, Derogation, Changes required, Comments — for
+all 106 criteria, as semicolon-separated CSV with a BOM, without which Excel in a
+French locale renders accented headings as mojibake.
 
-**Aucune ligne n'est jamais marquée `C`.** Selon la méthode RGAA, un critère
-n'est conforme que si tous ses tests passent, et un contrôle automatique n'en
-couvre qu'une fraction : le seul critère 1.1 en compte huit. Déclarer un critère
-conforme parce que l'unique aspect vérifiable est ressorti propre reviendrait à
-affirmer ce qu'on n'a pas établi, dans le document dont c'est précisément le
-rôle. Ce qui n'a pas été infirmé reste `NT`, non testé — là où le modèle officiel
-le place lui-même. Sur l'application de test : **15 NC, 91 NT, zéro C**.
+**No row is ever marked `C` (conformant).** Under the RGAA method a criterion is
+conformant only if all of its tests pass, and an automated check covers a
+fraction of them: criterion 1.1 alone has eight. Declaring a criterion conformant
+because the single verifiable aspect came out clean would assert what was never
+established, in the very document whose job is to record it. What has not been
+disproved stays `NT`, not tested — where the official template puts it itself. On
+the test application: **15 NC, 91 NT, zero C**.
 
-Ce qui fait gagner du temps à l'auditeur, ce sont les lignes NC déjà remplies
-avec les emplacements sources exacts.
+What saves an auditor time is the NC rows, already filled in with exact source
+locations.
 
-## Intégration continue
+## Continuous integration
 
 ```bash
 rgaa-source check --project . --baseline .rgaa-baseline.json
 ```
 
-La première exécution enregistre la référence et passe ; les suivantes comparent
-et n'échouent que sur les anomalies **nouvelles** de gravité critique ou majeure.
+The first run records the baseline and passes; later runs compare, and fail only
+on **new** findings of critical or serious severity.
 
-C'est ce qui rend l'outil adoptable sur un projet existant. Personne ne corrigera
-des centaines d'anomalies avant la prochaine livraison, mais tout le monde peut
-convenir de ne pas en ajouter — et un seuil qu'une équipe peut tenir est un seuil
-qu'elle laisse activé. Le fichier de référence se commite avec le code : la dette
-restante devient visible en revue au lieu de disparaître.
+This is what makes the tool adoptable on an existing codebase. Nobody will fix
+hundreds of findings before the next release, but everyone can agree not to add
+more — and a gate a team can hold is a gate they leave switched on. The baseline
+file is committed with the code, so remaining debt becomes visible in review
+instead of disappearing.
 
-L'identité d'une anomalie repose sur la règle, le fichier et le balisage, jamais
-sur le numéro de ligne : celui-ci bouge dès qu'on ajoute un import au-dessus, et
-une CI qui crie au loup finit supprimée.
+A finding's identity rests on the rule, the file and the markup, never on the
+line number: that moves the moment an import is added above, and a CI that cries
+wolf gets deleted.
 
-[`examples/github-workflow.yml`](examples/github-workflow.yml) est le workflow à
-recopier.
+[`examples/github-workflow.yml`](examples/github-workflow.yml) is the workflow to
+copy.
 
-Codes de sortie : `0` conforme au seuil, `1` violations, score insuffisant ou
-régression, `2` l'analyse elle-même a échoué.
+Exit codes: `0` within threshold, `1` violations, insufficient score or a
+regression, `2` the scan itself failed.
 
+## Instrumentation safety
 
-## Sécurité de l'instrumentation
+Templates are rewritten **in place**. Before each rewrite the original is parked
+in `node_modules/.cache/rgaa-restore/` — already git-ignored — and not merely
+held in memory. A process killed between the write and the restore is therefore
+recovered automatically on the next run.
 
-Les templates sont réécrits **en place**. Avant chaque réécriture, l'original est
-déposé dans `node_modules/.cache/rgaa-restore/` — déjà ignoré par git — et non
-seulement gardé en mémoire. Un processus tué entre l'écriture et la restauration
-est donc récupéré automatiquement au lancement suivant.
+That is what lets the scan depend on no git guard at all. The variant that
+refused to run on an uncommitted file blocked the most natural gesture — fix,
+then re-scan — and a guard that trips constantly ends up disabled, protecting
+nobody. Only writing fixes, which is final, still requires that git be able to
+give the original back.
 
-C'est ce qui permet à l'analyse de ne dépendre d'aucun garde-fou git. La variante
-qui refusait de tourner sur un fichier non commité bloquait le geste le plus
-naturel — corriger puis re-analyser — et un garde-fou qui se déclenche sans cesse
-finit désactivé, ne protégeant plus personne. Seule l'écriture des correctifs,
-qui est définitive, exige encore que git puisse rendre l'original.
+## The RGAA reference data
 
-## Le référentiel RGAA
+The table of 106 criteria is **generated from the official DINUM source**
+([`DISIC/RGAA`](https://github.com/DISIC/RGAA)), never typed by hand. The
+generated file carries the source URL and the SHA-256 digest of what produced it,
+and the generator fails unless it finds exactly 106 criteria across 13 topics.
 
-La table des 106 critères est **générée depuis la source officielle DINUM**
-([`DISIC/RGAA`](https://github.com/DISIC/RGAA)), jamais saisie à la main. Le
-fichier généré porte l'URL source et l'empreinte SHA-256 de ce qui l'a produit,
-et le générateur échoue s'il ne retrouve pas exactement 106 critères sur
-13 thématiques.
+Going through WCAG alone would be unusable: success criterion 1.1.1 underpins
+nineteen RGAA criteria across seven topics on its own, so a missing `alt` would
+cite captions, CAPTCHAs and video transcripts. The mapping is therefore
+established **per rule**, each entry justified against the criterion's official
+wording. A test verifies that no rule cites a criterion absent from the
+reference data.
 
-Passer par WCAG seul serait inexploitable : le critère de succès 1.1.1 sous-tend
-à lui seul dix-neuf critères RGAA sur sept thématiques, si bien qu'un `alt`
-manquant citerait les légendes, les CAPTCHA et les transcriptions vidéo. La
-correspondance est donc établie par règle, chaque entrée étant justifiée contre
-l'intitulé officiel du critère. Un test vérifie qu'aucune règle ne cite un
-critère absent du référentiel.
+## Rules of our own
 
-## Règles propres
+Seven rules run alongside axe, each answering an RGAA criterion axe does not
+test — either because it has no equivalent rule, or because its own stops short
+of what the French reference frame asks.
 
-Sept règles tournent aux côtés d'axe, chacune répondant à un critère RGAA qu'axe
-ne teste pas — soit qu'il n'ait aucune règle équivalente, soit que la sienne
-s'arrête avant ce que demande le référentiel français.
-
-| Règle | Critère | Ce qu'elle trouve |
+| Rule | Criterion | What it finds |
 |---|---|---|
-| `rgaa-lang-mismatch` | 8.4 | La langue déclarée ne correspond pas au contenu |
-| `rgaa-placeholder-page-title` | 8.6 | Un titre de page que personne n'a jamais écrit |
-| `rgaa-skip-link-missing` | 12.7 | Aucun lien d'évitement vers le contenu principal |
-| `rgaa-group-without-fieldset` | 11.5, 11.6 | Champs de même nature sans regroupement ni légende |
-| `rgaa-missing-autocomplete` | 11.13 | Champ d'identité sans jeton `autocomplete` |
-| `rgaa-link-not-explicit` | 6.1 | Intitulé de lien qui ne dit rien hors contexte |
-| `rgaa-duplicate-link-text` | 6.1 | Même intitulé pour des destinations différentes |
+| `rgaa-lang-mismatch` | 8.4 | The declared language does not match the content |
+| `rgaa-placeholder-page-title` | 8.6 | A page title nobody ever wrote |
+| `rgaa-skip-link-missing` | 12.7 | No skip link to the main content |
+| `rgaa-group-without-fieldset` | 11.5, 11.6 | Fields of the same nature with no grouping or legend |
+| `rgaa-missing-autocomplete` | 11.13 | Identity field without an `autocomplete` token |
+| `rgaa-link-not-explicit` | 6.1 | Link text that says nothing out of context |
+| `rgaa-duplicate-link-text` | 6.1 | The same link text for different destinations |
 
-La plus utile est la première. `ng new` écrit `lang="en"` dans le shell, les
-équipes françaises l'expédient sans y toucher, et axe ne vérifie que la validité
-syntaxique du code. Un lecteur d'écran prononce alors du français avec la
-phonétique anglaise, ce qui le rend inintelligible. La détection est délibérément
-prudente : sous quarante mots elle se tait, et il faut que la langue reconnue
-devance nettement celle déclarée pour qu'elle parle.
+The first is the most useful. `ng new` writes `lang="en"` into the shell, French
+teams ship it untouched, and axe only checks that the code is syntactically
+valid. A screen reader then pronounces French with English phonetics, which makes
+it unintelligible. The detection is deliberately cautious: below forty words it
+stays quiet, and the detected language must lead the declared one clearly before
+it speaks.
 
-Les deux dernières sont des **règles de revue** : le RGAA 6.1 admet qu'un lien
-soit implicite quand son contexte le rend explicite, ce qu'aucun contrôle ne peut
-trancher. Elles produisent des points à vérifier, pas des échecs, et n'entrent
-pas dans le score — les compter comme réussies gonflerait celui-ci en remplissant
-le dénominateur de contrôles qui ne peuvent jamais échouer.
+The last two are **review rules**: RGAA 6.1 accepts an implicit link when its
+context makes it explicit, which no automated check can settle. They produce
+points to verify, not failures, and do not enter the score — counting them as
+passes would inflate it by padding the denominator with checks that can never
+fail.
 
-Les règles sont empaquetées puis injectées dans la page comme axe. Ajouter une
-règle, c'est ajouter un fichier et une ligne dans le registre : le scanner n'est
-jamais touché. Une règle qui lève une exception coûte son propre constat, jamais
-l'analyse entière.
+Rules are bundled and injected into the page like axe itself. Adding a rule means
+adding a file and a line in the registry: the scanner is never touched. A rule
+that throws costs its own finding, never the whole scan.
 
-## Ce que cet outil n'est pas
+## What this tool is not
 
-Le score produit est un **score de pré-audit automatique**. Ce n'est pas un
-« taux de conformité RGAA », qui est une notion réglementaire établie par audit
-humain.
+The score it produces is an **automated pre-audit score**. It is not an "RGAA
+conformance rate", which is a regulatory notion established by human audit.
 
-`rgaa-source criteria` publie la capacité réelle du moteur : **35 des 106 critères**
-sont atteignables par un contrôle automatique, soit 33 %. Les 71 autres exigent
-un humain, et chaque rapport le dit. Les critères cités sont ceux **concernés**
-par une violation, pas un verdict rendu sur eux.
+`rgaa-source criteria` publishes the engine's real reach: **35 of the 106
+criteria** are addressable by an automated check, or 33%. The other 71 require a
+human, and every report says so. The criteria cited are the ones a violation
+**bears on**, not a verdict rendered on them.
 
-## Les 71 critères restants
+## The remaining 71 criteria
 
-Cet outil s'arrête là où commence le jugement humain : le contraste perçu, la
-pertinence d'un texte alternatif, l'ordre de tabulation, la cohérence d'un
-parcours. C'est la majorité du RGAA, et aucun automate ne la couvrira.
+This tool stops where human judgement begins: perceived contrast, whether a text
+alternative is apt, tab order, the coherence of a journey. That is the majority
+of RGAA, and no automated check will ever cover it.
 
-Je fais ce travail. Concrètement :
+That work is offered as a service — full RGAA 4.1.2 audits, Angular remediation,
+European Accessibility Act conformance, and team training. It is delivered in
+French, for the French and European market; see
+[the French README](README.fr.md#les-71-critères-restants) for details, or reach
+out through [my GitHub profile](https://github.com/oussamaLaribi).
 
-- **Audit RGAA 4.1.2 complet** sur les 106 critères, livré sous la grille
-  officielle, avec la déclaration d'accessibilité qui l'accompagne.
-- **Remédiation sur base Angular** — corriger, pas seulement constater, avec les
-  contraintes réelles d'un code de production et de son historique.
-- **Mise en conformité European Accessibility Act**, applicable depuis le
-  28 juin 2025.
-- **Formation d'équipe** pour que les régressions cessent d'apparaître.
+## Contributing
 
-Écrivez-moi via [mon profil GitHub](https://github.com/oussamaLaribi). Un premier
-échange sur ce que dit votre rapport ne coûte rien.
+Development commands, how to add a rule or a fixer, and the principles to follow
+are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Contribuer
+## Project status
 
-Les commandes de développement, la marche à suivre pour ajouter une règle ou un
-correcteur, et les principes à respecter sont dans
-[CONTRIBUTING.md](CONTRIBUTING.md).
+Version **0.1.0**, first release. The bridge — locating a violation down to its
+line of code — is verified on every CI run against a real Angular build, and
+validated on two open source projects.
 
-## État du projet
+**Tested on Angular 15, 16, 17, 19, 21 and 22** — same lines, same columns, same
+score on all six. Template parsing uses Angular 22's compiler, installed
+alongside yours without interfering with it: template syntax newer than v22 would
+require an update to this package.
 
-Version **0.1.0**, première publication. Le pont — la localisation d'une
-violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
-compilation Angular réelle, et validé sur deux projets open source.
+The historic `*ngIf` / `*ngFor` syntax is covered as well as the `@if` / `@for`
+blocks: the bridge works on positions in the file, not on control-flow syntax.
 
-**Testé sur Angular 15, 16, 17, 19, 21 et 22** — mêmes lignes, mêmes colonnes,
-même score sur les six. L'analyse des templates s'appuie sur le compilateur
-d'Angular 22, installé à côté du vôtre sans interférer avec lui : une syntaxe de
-template plus récente que la v22 demanderait une mise à jour de ce paquet.
+**Angular 15 is the verified floor.** Angular 14 could not be tested: it no
+longer builds under a current Node, its types tripping over `Disposable` which
+its TypeScript 4.7 does not know. That is a limit of Angular 14, not of this
+tool.
 
-La syntaxe historique `*ngIf` / `*ngFor` est couverte aussi bien que les blocs
-`@if` / `@for` : le pont travaille sur des positions dans le fichier, pas sur la
-syntaxe de contrôle.
+### Known limits
 
-**Angular 15 est le plancher vérifié.** Angular 14 n'a pas pu être testé : il ne
-compile plus dans un environnement Node actuel, ses types butant sur `Disposable`
-que son TypeScript 4.7 ne connaît pas. C'est une limite d'Angular 14, pas de cet
-outil.
+- **Angular only** for now. The core, the fixes and the reports depend on no
+  framework: adding React or Vue takes an adapter, not a rewrite.
+- **Your project must build.** The tool instruments and then runs `ng build`.
+- **Locations exist only on an instrumented build.** Scanning an arbitrary URL
+  reports violations but cannot attach them to any file, and the report says so.
+- **What is produced at runtime cannot be located** — an avatar coming from an
+  API, the contents of a third-party component. Those are listed separately
+  rather than pinned to an approximate line.
+- **About a third of the 106 RGAA criteria** is reachable automatically.
+  `rgaa-source criteria` publishes exactly which.
+- **Cross-origin iframes** are out of the scan's reach.
 
-### Limites connues
+### Considered
 
-- **Angular seulement** pour l'instant. Le cœur, les correctifs et les rapports
-  ne dépendent d'aucun framework : ajouter React ou Vue demande un adaptateur,
-  pas une réécriture.
-- **Votre projet doit compiler.** L'outil instrumente puis lance `ng build`.
-- **Les localisations n'existent que sur une compilation instrumentée.** Analyser
-  une URL arbitraire rapporte les violations mais ne peut les rattacher à aucun
-  fichier, et le rapport le dit.
-- **Ce qui est produit à l'exécution n'est pas localisable** — un avatar venu
-  d'une API, le contenu d'un composant tiers. Ces cas sont listés à part plutôt
-  que rattachés à une ligne approximative.
-- **Environ un tiers des 106 critères RGAA** est atteignable automatiquement.
-  `rgaa-source criteria` publie exactement lesquels.
-- Les **iframes d'une autre origine** échappent à l'analyse.
+More rules and more fixes, an adapter for a second framework, and a browser
+extension inheriting the same bridge — it would show the file and the line where
+existing extensions show a CSS selector.
 
-### Envisagé
-
-Davantage de règles et de correctifs, un adaptateur pour un second framework, et
-une extension de navigateur qui hériterait du même pont — elle afficherait le
-fichier et la ligne là où les extensions existantes montrent un sélecteur CSS.
-
-Les retours sur de vrais projets sont ce qui manque le plus :
-[ouvrez une issue](https://github.com/oussamaLaribi/RGAA/issues), surtout si une
-localisation tombe à côté.
+Feedback from real projects is what is missing most:
+[open an issue](https://github.com/oussamaLaribi/RGAA/issues), especially if a
+location comes out wrong.
