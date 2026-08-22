@@ -300,6 +300,25 @@ sont atteignables par un contrôle automatique, soit 33 %. Les 71 autres exigent
 un humain, et chaque rapport le dit. Les critères cités sont ceux **concernés**
 par une violation, pas un verdict rendu sur eux.
 
+## Les 71 critères restants
+
+Cet outil s'arrête là où commence le jugement humain : le contraste perçu, la
+pertinence d'un texte alternatif, l'ordre de tabulation, la cohérence d'un
+parcours. C'est la majorité du RGAA, et aucun automate ne la couvrira.
+
+Je fais ce travail. Concrètement :
+
+- **Audit RGAA 4.1.2 complet** sur les 106 critères, livré sous la grille
+  officielle, avec la déclaration d'accessibilité qui l'accompagne.
+- **Remédiation sur base Angular** — corriger, pas seulement constater, avec les
+  contraintes réelles d'un code de production et de son historique.
+- **Mise en conformité European Accessibility Act**, applicable depuis le
+  28 juin 2025.
+- **Formation d'équipe** pour que les régressions cessent d'apparaître.
+
+Écrivez-moi via [mon profil GitHub](https://github.com/oussamaLaribi). Un premier
+échange sur ce que dit votre rapport ne coûte rien.
+
 ## Contribuer
 
 Les commandes de développement, la marche à suivre pour ajouter une règle ou un
