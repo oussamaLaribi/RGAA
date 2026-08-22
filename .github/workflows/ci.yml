@@ -19,6 +19,13 @@ jobs:
 
       - run: npm ci
 
+      # Explicit rather than left to the other targets' dependsOn: those build a
+      # package's dependencies, not the package itself, and the bridge check
+      # below reads dist/ directly. Relying on a side effect here would break the
+      # day a target's dependencies change.
+      - name: Compilation
+        run: npm run build
+
       - name: Typage strict
         run: npm run typecheck
 
