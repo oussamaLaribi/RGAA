@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="424"
+     viewBox="0 0 1120 424" role="img" aria-labelledby="titre description">
+  <title id="titre">Correctifs proposés, affichés en diff avant toute écriture dans le code</title>
+  <desc id="description">src/app/app.component.html — 3:3  image-alt — ajouter une alternative à décrire, ou vide si décorative — 4:3  button-name — nommer le bouton d'après ce qu'il fait — 6:5  image-alt — ajouter une alternative à décrire, ou vide si décorative — 13:3  heading-order — ramener le titre au niveau suivant — 2     &lt;h1&gt;Boutique&lt;/h1&gt; — 3 -   &lt;img src=&quot;produit.jpg&quot;&gt; — 4 -   &lt;button (click)=&quot;fermer()&quot;&gt;&lt;svg viewBox=&quot;0 0 10 10&quot;&gt;&lt;path d=&quot;M0 0h10v10H0z&quot; /&gt;&lt;/svg&gt;&lt;/button&gt; — 3 +   &lt;img src=&quot;produit.jpg&quot; alt=&quot;TODO-a11y&quot;&gt; — 4 +   &lt;button (click)=&quot;fermer()&quot; aria-label=&quot;TODO-a11y&quot;&gt;&lt;svg viewBox=&quot;0 0 10 10&quot;&gt;&lt;path d=&quot;M0 0h10v10H0z&quot; /&gt;&lt;/svg&gt;&lt;/button&gt; — 5     @if (connecte) { — 6 -     &lt;img src=&quot;avatar.png&quot;&gt; — 6 +     &lt;img src=&quot;avatar.png&quot; alt=&quot;TODO-a11y&quot;&gt; — 7     } @else { — 12     } — 13 -   &lt;h4&gt;Sous-titre qui saute un niveau&lt;/h4&gt; — 13 +   &lt;h2&gt;Sous-titre qui saute un niveau&lt;/h2&gt; — 14   &lt;/main&gt;</desc>
+  <rect width="1120" height="424" rx="8" fill="#22272e"/>
+  <circle cx="24" cy="22" r="6" fill="#e5534b"/>
+  <circle cx="44" cy="22" r="6" fill="#c69026"/>
+  <circle cx="64" cy="22" r="6" fill="#57ab5a"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5">
+<text x="18.0" y="46" fill="#adbac7" xml:space="preserve">  </text><text x="34.8" y="46" fill="#adbac7" font-weight="600" xml:space="preserve">src/app/app.component.html</text>
+<text x="18.0" y="66" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="66" fill="#768390" xml:space="preserve">3:3</text><text x="76.8" y="66" fill="#adbac7" xml:space="preserve">  image-alt — ajouter une alternative à décrire, ou vide si décorative</text>
+<text x="18.0" y="86" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="86" fill="#768390" xml:space="preserve">4:3</text><text x="76.8" y="86" fill="#adbac7" xml:space="preserve">  button-name — nommer le bouton d'après ce qu'il fait</text>
+<text x="18.0" y="106" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="106" fill="#768390" xml:space="preserve">6:5</text><text x="76.8" y="106" fill="#adbac7" xml:space="preserve">  image-alt — ajouter une alternative à décrire, ou vide si décorative</text>
+<text x="18.0" y="126" fill="#adbac7" xml:space="preserve">    </text><text x="51.6" y="126" fill="#768390" xml:space="preserve">13:3</text><text x="85.2" y="126" fill="#adbac7" xml:space="preserve">  heading-order — ramener le titre au niveau suivant</text>
+<text x="18.0" y="146" fill="#768390" xml:space="preserve">       2     &lt;h1&gt;Boutique&lt;/h1&gt;</text>
+<text x="18.0" y="166" fill="#e5534b" xml:space="preserve">       3 -   &lt;img src=&quot;produit.jpg&quot;&gt;</text>
+<text x="18.0" y="186" fill="#e5534b" xml:space="preserve">       4 -   &lt;button (click)=&quot;fermer()&quot;&gt;&lt;svg viewBox=&quot;0 0 10 10&quot;&gt;&lt;path d=&quot;M0 0h10v10H0z&quot; /&gt;&lt;/svg&gt;&lt;/button&gt;</text>
+<text x="18.0" y="206" fill="#57ab5a" xml:space="preserve">       3 +   &lt;img src=&quot;produit.jpg&quot; alt=&quot;TODO-a11y&quot;&gt;</text>
+<text x="18.0" y="226" fill="#57ab5a" xml:space="preserve">       4 +   &lt;button (click)=&quot;fermer()&quot; aria-label=&quot;TODO-a11y&quot;&gt;&lt;svg viewBox=&quot;0 0 10 10&quot;&gt;&lt;path d=&quot;M0 0h10v10H0z&quot; /&gt;&lt;/svg&gt;&lt;/button&gt;</text>
+<text x="18.0" y="246" fill="#768390" xml:space="preserve">       5     @if (connecte) {</text>
+<text x="18.0" y="266" fill="#e5534b" xml:space="preserve">       6 -     &lt;img src=&quot;avatar.png&quot;&gt;</text>
+<text x="18.0" y="286" fill="#57ab5a" xml:space="preserve">       6 +     &lt;img src=&quot;avatar.png&quot; alt=&quot;TODO-a11y&quot;&gt;</text>
+<text x="18.0" y="306" fill="#768390" xml:space="preserve">       7     } @else {</text>
+<text x="18.0" y="326" fill="#768390" xml:space="preserve">      12     }</text>
+<text x="18.0" y="346" fill="#e5534b" xml:space="preserve">      13 -   &lt;h4&gt;Sous-titre qui saute un niveau&lt;/h4&gt;</text>
+<text x="18.0" y="366" fill="#57ab5a" xml:space="preserve">      13 +   &lt;h2&gt;Sous-titre qui saute un niveau&lt;/h2&gt;</text>
+<text x="18.0" y="386" fill="#768390" xml:space="preserve">      14   &lt;/main&gt;</text>
+  </g>
+</svg>

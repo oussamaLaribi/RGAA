@@ -22,7 +22,9 @@ C'est l'équivalent Angular de `babel-plugin-transform-react-jsx-source`
 
 ## Compatibilité
 
-Vérifié sur **Angular 17, 19, 21 et 22**. Le compilateur d'Angular 22 sert à
+Vérifié sur **Angular 15 à 22** — de la syntaxe `*ngIf` historique aux blocs
+`@if` modernes. Le pont travaille sur des positions dans le fichier, pas sur la
+syntaxe de contrôle, ce qui explique que la plage soit aussi large. Le compilateur d'Angular 22 sert à
 analyser les templates ; npm l'installe à côté de celui de votre projet sans
 interférer avec lui — vérifié sur un projet Angular 17, qui conserve le sien.
 

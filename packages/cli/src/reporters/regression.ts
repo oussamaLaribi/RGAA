@@ -1,14 +1,5 @@
 import type { BaselineComparison } from '@rgaa-source/report';
-
-const ESC = String.fromCharCode(27);
-const useColour = !process.env['NO_COLOR'] && process.stdout.isTTY;
-const paint = (code: string) => (text: string): string =>
-  useColour ? `${ESC}[${code}m${text}${ESC}[0m` : text;
-
-const dim = paint('2');
-const bold = paint('1');
-const red = paint('31');
-const green = paint('32');
+import { dim, bold, red, green } from './colour.js';
 
 export function formatRegressionReport(comparison: BaselineComparison): string {
   const out: string[] = ['', bold('Comparaison à la référence')];

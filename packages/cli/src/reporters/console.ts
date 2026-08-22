@@ -1,21 +1,7 @@
 import type { AuditResult, Severity, ViolationTarget, Violation } from '@rgaa-source/core';
 import { RGAA_CRITERIA_COUNT, SEVERITIES } from '@rgaa-source/core';
 import { messages, DEFAULT_LANG, type Lang, type Messages } from '../i18n.js';
-
-const useColour = !process.env['NO_COLOR'] && process.stdout.isTTY;
-
-/** Built from a char code so no raw control byte ever sits in this file. */
-const ESC = String.fromCharCode(27);
-
-const paint = (code: string) => (text: string): string =>
-  useColour ? `${ESC}[${code}m${text}${ESC}[0m` : text;
-
-const dim = paint('2');
-const bold = paint('1');
-const red = paint('31');
-const yellow = paint('33');
-const blue = paint('34');
-const green = paint('32');
+import { dim, bold, red, green, yellow, blue } from './colour.js';
 
 const SEVERITY_COLOUR: Record<Severity, (text: string) => string> = {
   critical: red,

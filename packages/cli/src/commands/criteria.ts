@@ -1,4 +1,5 @@
 import { messages, DEFAULT_LANG, type Lang } from '../i18n.js';
+import { dim, bold, green } from '../reporters/colour.js';
 import {
   ADDRESSABLE_CRITERIA,
   RGAA_CRITERIA_COUNT,
@@ -6,15 +7,6 @@ import {
   rgaaCriterion,
   RGAA_VERSION,
 } from '@rgaa-source/core';
-
-const ESC = String.fromCharCode(27);
-const useColour = !process.env['NO_COLOR'] && process.stdout.isTTY;
-const paint = (code: string) => (text: string): string =>
-  useColour ? `${ESC}[${code}m${text}${ESC}[0m` : text;
-
-const dim = paint('2');
-const bold = paint('1');
-const green = paint('32');
 
 /**
  * Print what the engine can and cannot reach in the reference frame.

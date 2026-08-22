@@ -10,12 +10,9 @@ npm install -D @rgaa-source/cli
 npx rgaa-source check --project .
 ```
 
-```
-  src/app/checkout/checkout.component.html
-    42:8      critique  image-alt   Les images doivent avoir une alternative textuelle
-              <img src="produit.jpg">
-              WCAG 1.1.1  ·  RGAA 1.1, 1.2
-```
+![Résultat d'une analyse : chaque violation est listée avec son fichier, sa ligne
+et sa colonne, sa gravité, la règle en cause et les critères RGAA
+concernés.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/analyse.svg)
 
 Un seul prérequis : **votre projet doit compiler**. L'outil instrumente vos
 templates puis lance `ng build`, donc si `npx ng build` échoue déjà, commencez
@@ -89,17 +86,9 @@ rgaa-source criteria                           # ce que le moteur peut couvrir d
 Sur un projet, chaque violation sort avec son fichier, sa ligne et les critères
 RGAA concernés :
 
-```
-  src/app/app.html
-    3:3       critique  image-alt   Les images doivent avoir une alternative textuelle
-              <img src="product.jpg">
-              WCAG 1.1.1  ·  RGAA 1.1, 1.2
-
-  Score de pré-audit  49/100
-  RGAA 4.1.2 — 24 critère(s) examiné(s) sur 106
-    15 en échec   1.1, 1.2, 6.1, 6.2, 8.4, 8.6, 9.1, 10.4, 11.1, 11.2, 11.5, 11.6, 11.9, 11.13, 12.7
-    82 hors de portée de tout contrôle automatique
-```
+![Résumé d'une analyse : score de pré-audit, répartition par gravité, nombre de
+critères RGAA examinés, en échec et à vérifier, et surtout le nombre de critères
+hors de portée de tout contrôle automatique.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/couverture.svg)
 
 Options principales : `--route` (répétable), `--min-score`, `--json`, `--html`,
 `--grid`, `--baseline`, `--browser`, `--reuse-build`, `--force`, `--verbose`,
@@ -159,6 +148,9 @@ rgaa-source check --project ./mon-app --fix              # écrit ce qui ne dema
 rgaa-source check --project ./mon-app --fix-suggested    # rédige aussi ce dont vous devrez écrire les mots
 rgaa-source check --project ./mon-app --fix --dry-run    # montre le diff, n'écrit rien
 ```
+
+![Correctifs proposés : chacun est listé avec sa ligne et ce qu'il fait, suivi du
+diff exact que la commande écrirait dans le fichier.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/correction.svg)
 
 Le plan complet est **toujours affiché en diff avant d'écrire**. Modifier
 automatiquement le code de quelqu'un n'est acceptable que s'il peut tout relire
@@ -320,14 +312,19 @@ Version **0.1.0**, première publication. Le pont — la localisation d'une
 violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
 compilation Angular réelle, et validé sur deux projets open source.
 
-**Testé sur Angular 17, 19, 21 et 22** — mêmes lignes, mêmes colonnes, même
-score sur les quatre. L'analyse des templates s'appuie sur le compilateur
+**Testé sur Angular 15, 16, 17, 19, 21 et 22** — mêmes lignes, mêmes colonnes,
+même score sur les six. L'analyse des templates s'appuie sur le compilateur
 d'Angular 22, installé à côté du vôtre sans interférer avec lui : une syntaxe de
 template plus récente que la v22 demanderait une mise à jour de ce paquet.
 
-Angular 17 est le plancher retenu parce que c'est la version qui a introduit
-`@if` et `@for`. Sur une version antérieure, l'outil devrait fonctionner mais
-n'a pas été vérifié.
+La syntaxe historique `*ngIf` / `*ngFor` est couverte aussi bien que les blocs
+`@if` / `@for` : le pont travaille sur des positions dans le fichier, pas sur la
+syntaxe de contrôle.
+
+**Angular 15 est le plancher vérifié.** Angular 14 n'a pas pu être testé : il ne
+compile plus dans un environnement Node actuel, ses types butant sur `Disposable`
+que son TypeScript 4.7 ne connaît pas. C'est une limite d'Angular 14, pas de cet
+outil.
 
 ### Limites connues
 

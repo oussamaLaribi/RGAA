@@ -52,6 +52,18 @@ export interface Messages {
   fixNoFixer: (rules: string) => string;
   fixUntraceable: (count: number) => string;
 
+  /**
+   * Wording for each fixer, keyed by rule.
+   *
+   * The fixers live in a framework-agnostic package that knows nothing about
+   * languages; translating here keeps that package free of presentation and
+   * leaves one place to look for every string this tool says.
+   *
+   * A rule absent from the map falls back to the fixer's own description, so a
+   * new fixer degrades to English rather than to nothing.
+   */
+  fixDescriptions: Readonly<Record<string, string>>;
+
   // criteria command
   criteriaReach: (reached: number, total: number, percent: number) => string;
   criteriaRest: string;
@@ -112,6 +124,24 @@ const FR: Messages = {
   fixNoFixer: (rules) => `aucune correction automatique pour : ${rules}`,
   fixUntraceable: (n) =>
     `${n} anomalie(s) n’ont pas été rattachées à un fichier et ne peuvent pas être modifiées`,
+
+  fixDescriptions: {
+    tabindex: 'retirer le tabindex positif',
+    'meta-viewport': 'réautoriser le zoom',
+    'rgaa-missing-autocomplete': 'ajouter le jeton autocomplete',
+    'presentation-role-conflict': 'retirer le rôle de présentation sur un élément focusable',
+    'html-has-lang': 'déclarer la langue de la page',
+    'rgaa-lang-mismatch': 'corriger la langue déclarée par celle détectée',
+    'rgaa-placeholder-page-title': 'remplacer le titre par défaut',
+    'document-title': 'donner un titre à la page',
+    'image-alt': 'ajouter une alternative à décrire, ou vide si décorative',
+    'role-img-alt': "nommer l'image",
+    'button-name': "nommer le bouton d'après ce qu'il fait",
+    'link-name': "nommer le lien d'après sa destination",
+    'frame-title': 'donner un titre au cadre',
+    label: 'étiqueter le champ',
+    'heading-order': 'ramener le titre au niveau suivant',
+  },
 
   criteriaReach: (reached, total, percent) =>
     `${reached} critères sur ${total} sont atteignables par un contrôle automatique (${percent} %).`,
@@ -175,6 +205,9 @@ const EN: Messages = {
   fixNoFixer: (rules) => `no automated fix for: ${rules}`,
   fixUntraceable: (n) =>
     `${n} violation(s) were never traced to a file and cannot be edited`,
+
+  // Empty: the fixers already carry their English wording.
+  fixDescriptions: {},
 
   criteriaReach: (reached, total, percent) =>
     `${reached} of ${total} criteria can be reached by an automated check (${percent}%).`,

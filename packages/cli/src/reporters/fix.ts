@@ -1,16 +1,6 @@
 import { formatDiff, PLACEHOLDER, type FixPlan } from '@rgaa-source/fix';
 import { messages, DEFAULT_LANG, type Lang } from '../i18n.js';
-
-const ESC = String.fromCharCode(27);
-const useColour = !process.env['NO_COLOR'] && process.stdout.isTTY;
-const paint = (code: string) => (text: string): string =>
-  useColour ? `${ESC}[${code}m${text}${ESC}[0m` : text;
-
-const dim = paint('2');
-const bold = paint('1');
-const green = paint('32');
-const red = paint('31');
-const yellow = paint('33');
+import { dim, bold, red, green, yellow } from './colour.js';
 
 /** Colour the diff markers without re-parsing: the prefix is at a fixed column. */
 function paintDiffLine(line: string): string {
@@ -28,7 +18,8 @@ export function formatFixReport(plan: FixPlan, applied: boolean, lang: Lang = DE
   for (const file of plan.files) {
     out.push(`  ${bold(file.relativePath)}`);
     for (const fix of file.applied) {
-      out.push(`    ${dim(`${fix.line}:${fix.column}`)}  ${fix.ruleId} — ${fix.description}`);
+      const quoi = t.fixDescriptions[fix.ruleId] ?? fix.description;
+      out.push(`    ${dim(`${fix.line}:${fix.column}`)}  ${fix.ruleId} — ${quoi}`);
     }
     out.push(...formatDiff(file).map(paintDiffLine), '');
   }

@@ -15,7 +15,8 @@
     "typecheck": "nx run-many -t typecheck",
     "verify:bridge": "npm run verify:bridge --prefix apps/fixture-app",
     "build:rgaa": "npm run build:rgaa --workspace @rgaa/core",
-    "build:packages": "node scripts/prepare-packages.mjs"
+    "build:packages": "node scripts/prepare-packages.mjs",
+    "build:docs": "node scripts/build-docs-images.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
