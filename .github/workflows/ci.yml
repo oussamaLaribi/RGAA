@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typage strict
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # The bridge is the claim the whole product rests on, so it is verified
+      # against a real Angular AOT build rather than only at the unit level.
+      - name: Installer l'application de test
+        run: npm ci
+        working-directory: apps/fixture-app
+
+      - name: Vérifier le pont de bout en bout
+        run: npm run verify:bridge

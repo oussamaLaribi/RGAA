@@ -1,0 +1,29 @@
+<main>
+  <h1>Boutique</h1>
+  <p>
+    Bienvenue dans la boutique en ligne. Vous trouverez sur cette page les
+    articles que nous proposons à la vente, avec pour chacun une description
+    détaillée et le prix affiché toutes taxes comprises. Les commandes passées
+    avant seize heures sont expédiées le jour même depuis notre entrepôt.
+    Pour toute question sur une commande en cours, vous pouvez nous écrire et
+    nous vous répondrons dans les meilleurs délais.
+  </p>
+  <img src="product.jpg">
+  <button (click)="close()"><svg viewBox="0 0 10 10"><path d="M0 0h10v10H0z" /></svg></button>
+  <form>
+    <input type="email">
+    <label for="name">Nom</label>
+    <input type="text" id="name">
+    <input type="radio" name="livraison" id="rapide">
+    <label for="rapide">Livraison rapide</label>
+    <input type="radio" name="livraison" id="standard">
+    <label for="standard">Livraison standard</label>
+  </form>
+  <a href="/panier"></a>
+  <a href="/conditions">En savoir plus</a>
+  <a href="/livraison">En savoir plus</a>
+  @if (loggedIn()) {
+    <img src="avatar.png">
+  }
+  <h4>Sous-titre saute un niveau</h4>
+</main>

@@ -1,0 +1,57 @@
+{
+  "name": "@rgaa-source/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/bundle-rules.mjs",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "build:rgaa": "node scripts/build-rgaa-mapping.mjs"
+  },
+  "dependencies": {
+    "axe-core": "^4.13.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "description": "Accessibility engine mapping axe-core and custom rules to the French RGAA 4.1 reference frame.",
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "rgaa",
+    "wcag",
+    "angular",
+    "axe-core",
+    "audit",
+    "accessibilite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oussamaLaribi/RGAA.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/oussamaLaribi/RGAA/issues"
+  },
+  "homepage": "https://github.com/oussamaLaribi/RGAA#readme",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

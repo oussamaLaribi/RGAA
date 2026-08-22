@@ -1,0 +1,55 @@
+{
+  "name": "@rgaa-source/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "rgaa-source": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@rgaa-source/core": "^0.1.0",
+    "@rgaa-source/angular": "^0.1.0",
+    "axe-core": "^4.13.0",
+    "playwright": "^1.62.1",
+    "@rgaa-source/fix": "^0.1.0",
+    "@rgaa-source/report": "^0.1.0"
+  },
+  "description": "Accessibility scanner for Angular projects that reports the line of code, not a CSS selector.",
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "rgaa",
+    "wcag",
+    "angular",
+    "axe-core",
+    "audit",
+    "accessibilite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oussamaLaribi/RGAA.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/oussamaLaribi/RGAA/issues"
+  },
+  "homepage": "https://github.com/oussamaLaribi/RGAA#readme",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

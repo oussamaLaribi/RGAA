@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.nx/
+*.tsbuildinfo
+.idea/
+report.html
+grille.csv
+baseline.json
+*.rgaa-baseline.json
+.npmrc
+# outillage local, pas une configuration du projet
+CLAUDE.md
+.claude/

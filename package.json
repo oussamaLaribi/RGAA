@@ -1,0 +1,29 @@
+{
+  "name": "@rgaa/workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "typecheck": "nx run-many -t typecheck",
+    "verify:bridge": "npm run verify:bridge --prefix apps/fixture-app",
+    "build:rgaa": "npm run build:rgaa --workspace @rgaa/core",
+    "build:packages": "node scripts/prepare-packages.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "esbuild": "^0.28.2",
+    "happy-dom": "^20.11.6",
+    "nx": "^23.1.1",
+    "playwright": "^1.62.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

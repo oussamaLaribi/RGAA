@@ -1,0 +1,82 @@
+# Accessibility gate for an Angular project.
+#
+# Copy into .github/workflows/ and adjust `working-directory` if the app is not
+# at the repository root.
+#
+# It expects an rgaa.config.json committed alongside the code:
+#
+#   {
+#     "project": ".",
+#     "routes": ["/", "/contact"],
+#     "baseline": ".rgaa-baseline.json",
+#     "html": "rgaa-report.html",
+#     "grid": "rgaa-grille.csv"
+#   }
+#
+# The gate is deliberately built around a baseline rather than a clean bill of
+# health. A codebase that already has hundreds of violations cannot be cleaned
+# before the next release, so a gate demanding zero would simply be switched off.
+# Failing only on newly introduced violations is a bar a team can actually meet,
+# and the baseline file makes the remaining debt visible in review instead of
+# hiding it.
+
+name: Accessibilité
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  rgaa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # The scan drives a real browser, so one has to be present. Chromium is
+      # the smallest option on a runner; locally the CLI defaults to the Edge
+      # that already ships with Windows.
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Everything that belongs to the project — routes, threshold, deliverables —
+      # lives in rgaa.config.json, committed next to the code. Only what belongs
+      # to *this environment* is a flag here.
+      #
+      # That split is what keeps a developer's local run and this job identical.
+      # Settings that live only in a workflow file silently diverge from what
+      # anyone runs on their machine, and the gate becomes the classic "it passed
+      # locally" argument nobody can settle.
+      #
+      # No --fail is needed: outside a terminal the scan blocks by default.
+      - name: Pré-audit RGAA
+        run: npx rgaa-source check --browser chromium
+
+      # Uploaded whatever the outcome: the report is most useful precisely when
+      # the job failed.
+      - name: Publier les livrables
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-audit-rgaa
+          path: |
+            rgaa-report.html
+            rgaa-grille.csv
+
+# Commit `.rgaa-baseline.json` alongside the code. The first run records it and
+# passes; every later run compares against it and fails only on what is new.
+# Regenerate it deliberately — by deleting the file and rerunning — when a batch
+# of fixes lands, so the reduction shows up in the diff.
+#
+# Other ways to set the bar, instead of --baseline:
+#   --min-score 80    fail when any page scores below 80
+#   (no flag)         fail on any violation at all — only realistic on a new project

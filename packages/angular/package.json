@@ -1,0 +1,54 @@
+{
+  "name": "@rgaa-source/angular",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@rgaa-source/core": "^0.1.0",
+    "@angular/compiler": "^22.0.0"
+  },
+  "description": "Rewrites Angular templates so every rendered element carries the file, line and column it was written at.",
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "rgaa",
+    "wcag",
+    "angular",
+    "axe-core",
+    "audit",
+    "accessibilite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oussamaLaribi/RGAA.git",
+    "directory": "packages/angular"
+  },
+  "bugs": {
+    "url": "https://github.com/oussamaLaribi/RGAA/issues"
+  },
+  "homepage": "https://github.com/oussamaLaribi/RGAA#readme",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
