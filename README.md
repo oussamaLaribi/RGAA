@@ -234,18 +234,6 @@ recopier.
 Codes de sortie : `0` conforme au seuil, `1` violations, score insuffisant ou
 régression, `2` l'analyse elle-même a échoué.
 
-## Commandes de développement
-
-```bash
-npm test                  # suite unitaire
-npm run typecheck         # typage strict, tests inclus
-npm run verify:bridge     # preuve bout en bout à travers un vrai build Angular AOT
-```
-
-`verify:bridge` instrumente l'app de fixtures, lance une compilation AOT réelle,
-restaure les templates, puis vérifie que chaque localisation a survécu à la
-compilation. `apps/fixture-app/verify-dom.mjs` pousse la vérification jusqu'au
-DOM rendu dans un navigateur.
 
 ## Sécurité de l'instrumentation
 
@@ -267,10 +255,6 @@ La table des 106 critères est **générée depuis la source officielle DINUM**
 fichier généré porte l'URL source et l'empreinte SHA-256 de ce qui l'a produit,
 et le générateur échoue s'il ne retrouve pas exactement 106 critères sur
 13 thématiques.
-
-```bash
-npm run build:rgaa    # régénère la table, à relire en diff
-```
 
 Passer par WCAG seul serait inexploitable : le critère de succès 1.1.1 sous-tend
 à lui seul dix-neuf critères RGAA sur sept thématiques, si bien qu'un `alt`
@@ -324,56 +308,44 @@ sont atteignables par un contrôle automatique, soit 33 %. Les 71 autres exigent
 un humain, et chaque rapport le dit. Les critères cités sont ceux **concernés**
 par une violation, pas un verdict rendu sur eux.
 
-## État
+## Contribuer
 
-**Sprint 1** — le pont, démontré de bout en bout à travers une compilation
-Angular 22 réelle et vérifié sur le DOM rendu.
+Les commandes de développement, la marche à suivre pour ajouter une règle ou un
+correcteur, et les principes à respecter sont dans
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-**Sprint 2** — moteur axe-core, CLI Playwright, rapports console et JSON, codes
-de sortie, multi-routes.
+## État du projet
 
-**Sprint 3** — référentiel RGAA 4.1.2 généré depuis la source officielle,
-correspondance par règle, couverture explicite du référentiel sur chaque rapport,
-commande `rgaa criteria`.
+Version **0.1.0**, première publication. Le pont — la localisation d'une
+violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
+compilation Angular réelle, et validé sur deux projets open source.
 
-**Sprint 4** — moteur de correction : éditions aux positions sources, trois
-niveaux de jugement, diff avant écriture, garde-fou git. Sur l'application de
-test, une seule commande fait passer le score de 43/100 à 100/100.
+**Testé sur Angular 21 et 22.** L'analyse des templates s'appuie sur le
+compilateur d'Angular 22 : une syntaxe de template plus récente qu'elle
+demanderait une mise à jour de ce paquet.
 
-**Sprint 5** — sept règles propres répondant à des critères qu'axe ne teste pas,
-empaquetées et injectées dans la page, avec correcteurs et couverture de tests.
+### Limites connues
 
-**Sprint 6** — livrables et CI : rapport HTML autonome, grille d'évaluation RGAA
-4.1 en CSV, comparaison à une référence, exemple de workflow GitHub.
+- **Angular seulement** pour l'instant. Le cœur, les correctifs et les rapports
+  ne dépendent d'aucun framework : ajouter React ou Vue demande un adaptateur,
+  pas une réécriture.
+- **Votre projet doit compiler.** L'outil instrumente puis lance `ng build`.
+- **Les localisations n'existent que sur une compilation instrumentée.** Analyser
+  une URL arbitraire rapporte les violations mais ne peut les rattacher à aucun
+  fichier, et le rapport le dit.
+- **Ce qui est produit à l'exécution n'est pas localisable** — un avatar venu
+  d'une API, le contenu d'un composant tiers. Ces cas sont listés à part plutôt
+  que rattachés à une ligne approximative.
+- **Environ un tiers des 106 critères RGAA** est atteignable automatiquement.
+  `rgaa-source criteria` publie exactement lesquels.
+- Les **iframes d'une autre origine** échappent à l'analyse.
 
-**Sprint 7** — ouverture : métadonnées de publication, licence, documentation par
-paquet, guide de contribution, et **validation sur un vrai projet Angular 21**
-(`angular-realworld-example-app`, 11 templates). Analyse complète en 9,4 s, et
-chaque localisation vérifiée exacte contre le code d'origine — y compris sur une
-directive structurelle maison et des templates profondément imbriqués.
+### Envisagé
 
-### Publication
+Davantage de règles et de correctifs, un adaptateur pour un second framework, et
+une extension de navigateur qui hériterait du même pont — elle afficherait le
+fichier et la ligne là où les extensions existantes montrent un sélecteur CSS.
 
-Le nom, la licence et l'URL du dépôt sont arrêtés : organisation npm
-`rgaa-source`, licence MIT, dépôt
-[`oussamaLaribi/RGAA`](https://github.com/oussamaLaribi/RGAA). Les métadonnées
-des cinq paquets se régénèrent depuis une seule source :
-
-```bash
-npm run build:packages   # version, dépôt, licence, mots-clés, publishConfig
-```
-
-Publier une version :
-
-```bash
-npm login                                    # le jeton expire régulièrement
-npm run build && npm test && npm run typecheck
-npm publish --workspace @rgaa-source/core --access public
-npm publish --workspace @rgaa-source/angular --access public
-npm publish --workspace @rgaa-source/fix --access public
-npm publish --workspace @rgaa-source/report --access public
-npm publish --workspace @rgaa-source/cli --access public
-```
-
-L'ordre compte : chaque paquet dépend des précédents, et npm refuse une
-dépendance vers une version qui n'existe pas encore sur le registre.
+Les retours sur de vrais projets sont ce qui manque le plus :
+[ouvrez une issue](https://github.com/oussamaLaribi/RGAA/issues), surtout si une
+localisation tombe à côté.

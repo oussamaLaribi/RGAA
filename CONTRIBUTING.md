@@ -164,6 +164,35 @@ rattrapée. Les remettre en cause demande un argument, pas une préférence.
    lesquels il ne s'est pas prononcé. C'est ce qui empêche le score d'être lu
    comme un taux de conformité.
 
+## Publier une version
+
+Les métadonnées des cinq paquets — version, dépôt, licence, mots-clés,
+`publishConfig` — se régénèrent depuis une seule source, pour qu'elles ne
+divergent jamais :
+
+```bash
+npm run build:packages
+```
+
+Avant de publier, la répétition générale sur registre local décrite plus haut.
+Puis :
+
+```bash
+npm login
+npm run build && npm test && npm run typecheck
+npm publish --workspace @rgaa-source/core --access public
+npm publish --workspace @rgaa-source/angular --access public
+npm publish --workspace @rgaa-source/fix --access public
+npm publish --workspace @rgaa-source/report --access public
+npm publish --workspace @rgaa-source/cli --access public
+```
+
+L'ordre compte : chaque paquet dépend des précédents, et npm refuse une
+dépendance vers une version absente du registre. Le `--access public` est déjà
+dans `publishConfig`, mais le répéter évite d'avoir à diagnostiquer l'échec —
+un scope npm publie en privé par défaut, et l'erreur ressemble à un problème de
+facturation plutôt qu'à un problème de permission.
+
 ## Le référentiel RGAA
 
 `packages/core/src/mapping/rgaa-criteria.generated.ts` est **généré**. Ne
