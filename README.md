@@ -295,7 +295,7 @@ Le score produit est un **score de pré-audit automatique**. Ce n'est pas un
 « taux de conformité RGAA », qui est une notion réglementaire établie par audit
 humain.
 
-`rgaa criteria` publie la capacité réelle du moteur : **35 des 106 critères**
+`rgaa-source criteria` publie la capacité réelle du moteur : **35 des 106 critères**
 sont atteignables par un contrôle automatique, soit 33 %. Les 71 autres exigent
 un humain, et chaque rapport le dit. Les critères cités sont ceux **concernés**
 par une violation, pas un verdict rendu sur eux.
