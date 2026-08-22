@@ -1,42 +1,43 @@
 # @rgaa-source/angular
 
-Le pont entre le DOM rendu et le code source Angular.
+The bridge between the rendered DOM and Angular source code.
 
-Réécrit les templates avant la compilation pour poser sur chaque élément rendu
-l'attribut `data-a11y-src="fichier:ligne:colonne"`, aux offsets que le
-compilateur Angular rapporte lui-même (`parseTemplate` → `sourceSpan`).
+Rewrites templates before the build to put a
+`data-a11y-src="file:line:column"` attribute on every rendered element, at the
+offsets Angular's own compiler reports (`parseTemplate` → `sourceSpan`).
 
-C'est l'équivalent Angular de `babel-plugin-transform-react-jsx-source`
-(`_debugSource`) côté React, qui n'existait pas jusqu'ici.
+This is the Angular equivalent of `babel-plugin-transform-react-jsx-source`
+(`_debugSource`) on the React side, which did not exist here until now.
 
-## Propriétés
+## Properties
 
-- **Pure insertion de texte.** L'AST n'est jamais re-sérialisé : formatage,
-  bindings, `@if`/`@for`/`@switch`/`@defer` survivent intacts.
-- **Exact ou absent, jamais deviné.** Un développeur envoyé à la mauvaise ligne
-  perd plus de temps qu'un développeur envoyé nulle part.
-- **Idempotent**, donc une reprise après échec est sans danger.
-- **Récupérable.** Avant chaque réécriture l'original est déposé dans
-  `node_modules/.cache/rgaa-restore/` ; un processus tué entre l'écriture et la
-  restauration est récupéré au lancement suivant.
+- **Pure text insertion.** The AST is never re-serialised: formatting, bindings,
+  and `@if`/`@for`/`@switch`/`@defer` all survive untouched.
+- **Exact or absent, never guessed.** A developer sent to the wrong line loses
+  more time than a developer sent nowhere at all.
+- **Idempotent**, so resuming after a failure is safe.
+- **Recoverable.** Before each rewrite the original is parked in
+  `node_modules/.cache/rgaa-restore/`; a process killed between the write and the
+  restore is recovered on the next run.
 
-## Compatibilité
+## Compatibility
 
-Vérifié sur **Angular 15 à 22** — de la syntaxe `*ngIf` historique aux blocs
-`@if` modernes. Le pont travaille sur des positions dans le fichier, pas sur la
-syntaxe de contrôle, ce qui explique que la plage soit aussi large. Le compilateur d'Angular 22 sert à
-analyser les templates ; npm l'installe à côté de celui de votre projet sans
-interférer avec lui — vérifié sur un projet Angular 17, qui conserve le sien.
+Verified on **Angular 15 through 22** — from the historic `*ngIf` syntax to
+modern `@if` blocks. The bridge works on positions in the file rather than on
+control-flow syntax, which is why the range is that wide. Angular 22's compiler
+does the template parsing; npm installs it alongside your project's own without
+interfering with it — verified on an Angular 17 project, which keeps its own.
 
 ## Usage
 
 ```ts
 const session = await instrumentTemplates(templates, projectRoot);
 try {
-  // compiler le projet : la sortie conserve les localisations
+  // build the project: the output keeps the source locations
 } finally {
-  await session.restore(); // toujours dans un finally
+  await session.restore(); // always in a finally
 }
 ```
 
-Documentation complète : [README du projet](../../README.md).
+Full documentation: [project README](https://github.com/oussamaLaribi/RGAA#readme)
+· [en français](https://github.com/oussamaLaribi/RGAA/blob/main/README.fr.md).

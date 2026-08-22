@@ -1,24 +1,27 @@
 # @rgaa-source/fix
 
-Applique des correctifs d'accessibilité **dans le code source**, aux positions
-que le pont a relevées.
+Applies accessibility fixes **in the source code**, at the positions the bridge
+recorded.
 
-Les correctifs sont classés par le jugement qu'ils exigent :
+Fixes are graded by the judgement they demand:
 
-| Niveau | Signification |
+| Level | Meaning |
 |---|---|
-| **safe** | Mécaniquement certain sans rien savoir du sens de la page |
-| **suggested** | La forme est connue, les mots non — écrit un marqueur `TODO-a11y` |
-| **manual** | Signalé, jamais écrit |
+| **safe** | Mechanically certain without knowing anything about the page's meaning |
+| **suggested** | The shape is known, the words are not — writes a `TODO-a11y` marker |
+| **manual** | Reported, never written |
 
-La liste des correctifs sûrs est courte, et c'est volontaire. La plupart des
-corrections d'accessibilité consistent à **écrire un texte qui décrit quelque
-chose**, et aucun outil ne sait ce que montre une image ni ce que fait un bouton.
-Une alternative fausse est pire que l'attribut manquant : le lecteur d'écran la
-croit, alors qu'une absence reste détectable.
+The list of safe fixes is short, and that is deliberate. Most accessibility fixes
+consist of **writing text that describes something**, and no tool knows what an
+image shows or what a button does. A wrong alternative is worse than a missing
+attribute: a screen reader believes it, whereas an absence stays detectable.
 
-Le plan est toujours produit en entier avant la moindre écriture, pour être
-affiché en diff et refusé. Les éditions qui se chevauchent sont rejetées plutôt
-qu'appliquées au hasard.
+The plan is always produced in full before anything is written, so it can be
+shown as a diff and refused. Overlapping edits are rejected rather than applied
+in an arbitrary order.
 
-Documentation complète : [README du projet](../../README.md).
+Framework-agnostic: the template parser is injected, so this package knows
+nothing about Angular.
+
+Full documentation: [project README](https://github.com/oussamaLaribi/RGAA#readme)
+· [en français](https://github.com/oussamaLaribi/RGAA/blob/main/README.fr.md).

@@ -1,10 +1,10 @@
 # @rgaa-source/cli
 
-Analyse d'accessibilité pour projets **Angular** qui rapporte **la ligne de code**,
-pas un sélecteur CSS.
+Accessibility scanning for **Angular** projects that reports **the line of
+code**, not a CSS selector.
 
 ```bash
-npx @rgaa-source/cli check --project ./mon-app
+npx @rgaa-source/cli check --project ./my-app
 ```
 
 ```
@@ -14,39 +14,42 @@ npx @rgaa-source/cli check --project ./mon-app
               WCAG 1.1.1  ·  RGAA 1.1, 1.2
 ```
 
-Les outils existants s'arrêtent à `body > main > form > input.email`, qui ne
-correspond à aucun fichier ouvrable. Ici, la violation porte sa propre adresse
-source, parce que les templates ont été instrumentés avant la compilation.
+Existing tools stop at `body > main > form > input.email`, which matches no file
+you can open. Here the violation carries its own source address, because the
+templates were instrumented before the build.
 
-## Commandes
+## Commands
 
 | | |
 |---|---|
-| `check --project <dir>` | instrumente, compile, sert et analyse un projet Angular |
-| `check <url…>` | analyse des pages déjà servies (sans localisation source) |
-| `criteria` | ce que le moteur peut couvrir des 106 critères RGAA |
+| `check --project <dir>` | instrument, build, serve and scan an Angular project |
+| `check <url…>` | scan already-served pages (no source locations) |
+| `criteria` | what the engine can reach of the 106 RGAA criteria |
 
 ## Options
 
-`--route <path>` (répétable) · `--min-score <n>` · `--baseline <file>` ·
+`--route <path>` (repeatable) · `--min-score <n>` · `--baseline <file>` ·
 `--html <file>` · `--grid <file>` · `--json <file>` · `--fix` ·
-`--fix-suggested` · `--dry-run` · `--browser <channel>` · `--no-fail` ·
-`--reuse-build` · `--force` · `--verbose`
+`--fix-suggested` · `--dry-run` · `--browser <channel>` · `--lang <fr|en>` ·
+`--no-fail` · `--reuse-build` · `--force` · `--verbose`
 
-Codes de sortie : `0` conforme au seuil · `1` violations, score insuffisant ou
-régression · `2` l'analyse elle-même a échoué.
+Output defaults to French, the reference frame's own language; `--lang en`
+switches everything — console, HTML, grid and JSON alike.
 
-## Prérequis
+Exit codes: `0` within threshold · `1` violations, insufficient score or a
+regression · `2` the scan itself failed.
 
-Node 20+ et un navigateur pour Playwright. Par défaut le CLI pilote l'Edge déjà
-présent sous Windows ; ailleurs, `npx playwright install chromium` puis
+## Requirements
+
+Node 20.12+ and a browser for Playwright. By default the CLI drives the Edge
+already present on Windows; elsewhere, `npx playwright install chromium` then
 `--browser chromium`.
 
-## Portée
+## Scope
 
-Le score produit est un **pré-audit automatique**, pas un taux de conformité
-RGAA — cette notion est réglementaire et s'établit par un audit humain. Environ
-un tiers des 106 critères est atteignable automatiquement ; `rgaa criteria` le
-détaille.
+The score is an **automated pre-audit**, not an RGAA conformance rate — that
+notion is regulatory and is established by human audit. About a third of the 106
+criteria is reachable automatically; `rgaa-source criteria` spells out which.
 
-Documentation complète : [README du projet](../../README.md).
+Full documentation: [project README](https://github.com/oussamaLaribi/RGAA#readme)
+· [en français](https://github.com/oussamaLaribi/RGAA/blob/main/README.fr.md).

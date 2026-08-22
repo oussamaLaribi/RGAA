@@ -1,30 +1,30 @@
 # @rgaa-source/report
 
-Livrables d'un pré-audit : rapport HTML, grille d'évaluation RGAA, comparaison à
-une référence.
+Pre-audit deliverables: HTML report, RGAA evaluation grid, baseline comparison.
 
-## Grille RGAA 4.1
+## RGAA 4.1 grid
 
-Reprend les colonnes exactes du modèle officiel — Thématique, Critère,
-Recommandation, Statut, Dérogation, Modifications à apporter, Commentaires —
-pour les 106 critères.
+Uses the exact columns of the official template — Topic, Criterion,
+Recommendation, Status, Derogation, Changes required, Comments — for all 106
+criteria.
 
-**Aucune ligne n'est jamais marquée `C`.** Selon la méthode RGAA un critère n'est
-conforme que si tous ses tests passent, et un contrôle automatique n'en couvre
-qu'une fraction : le seul critère 1.1 en compte huit. Ce qui n'a pas été infirmé
-reste `NT`, non testé, là où le modèle officiel le place lui-même. Les lignes
-`NC` arrivent pré-remplies avec les emplacements sources exacts.
+**No row is ever marked `C` (conformant).** Under the RGAA method a criterion is
+conformant only if all of its tests pass, and an automated check covers a
+fraction of them: criterion 1.1 alone has eight. What has not been disproved
+stays `NT`, not tested — where the official template puts it itself. The `NC`
+rows arrive pre-filled with exact source locations.
 
-## Comparaison à une référence
+## Baseline comparison
 
-Transforme la question « ce code est-il propre ? » en « ce changement l'a-t-il
-dégradé ? ». L'identité d'une anomalie repose sur la règle, le fichier et le
-balisage, jamais sur le numéro de ligne — celui-ci bouge dès qu'on ajoute un
-import au-dessus, et une CI qui crie au loup finit supprimée.
+Turns "is this code clean?" into "did this change make it worse?". A finding's
+identity rests on the rule, the file and the markup, never on the line number —
+that moves the moment an import is added above, and a CI that cries wolf gets
+deleted.
 
-## Rapport HTML
+## HTML report
 
-Autonome : aucune feuille externe, aucun script, aucun appel réseau. Il doit
-encore s'ouvrir correctement depuis une pièce jointe dans deux ans.
+Self-contained: no external stylesheet, no script, no network call. It must still
+open correctly from an email attachment in two years.
 
-Documentation complète : [README du projet](../../README.md).
+Full documentation: [project README](https://github.com/oussamaLaribi/RGAA#readme)
+· [en français](https://github.com/oussamaLaribi/RGAA/blob/main/README.fr.md).
