@@ -13,6 +13,10 @@
     "!src/**/*.test.ts"
   ],
   "license": "MIT",
+  "author": {
+    "name": "Oussama Laribi",
+    "url": "https://github.com/oussamaLaribi"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
