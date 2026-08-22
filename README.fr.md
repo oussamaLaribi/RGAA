@@ -329,7 +329,7 @@ correcteur, et les principes à respecter sont dans
 
 ## État du projet
 
-Version **0.1.0**, première publication. Le pont — la localisation d'une
+Version **0.1.1**, première publication. Le pont — la localisation d'une
 violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
 compilation Angular réelle, et validé sur deux projets open source.
 

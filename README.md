@@ -330,7 +330,7 @@ are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Project status
 
-Version **0.1.0**, first release. The bridge — locating a violation down to its
+Version **0.1.1**, first release. The bridge — locating a violation down to its
 line of code — is verified on every CI run against a real Angular build, and
 validated on two open source projects.
 
