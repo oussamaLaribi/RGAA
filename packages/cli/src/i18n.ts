@@ -201,9 +201,10 @@ const FR: Messages = {
   buildFailed:
     "la compilation du projet a échoué. Vérifiez que « ng build » fonctionne avant d'analyser.",
   badWorkspace: (p) => `${p} n'est pas un JSON valide.`,
-  noApplication: "angular.json ne déclare aucune application : il n'y a rien à analyser.",
+  noApplication:
+    "cet espace de travail ne déclare aucune application : il n'y a rien à analyser.",
   unknownApplication: (n, dispo) =>
-    `application « ${n} » inconnue. Celles que déclare angular.json : ${dispo.join(', ')}.`,
+    `application « ${n} » inconnue. Celles que déclare cet espace de travail : ${dispo.join(', ')}.`,
   ambiguousApplication: (dispo) =>
     `cet espace de travail déclare plusieurs applications : ${dispo.join(', ')}.\n` +
     "Choisissez celle à analyser avec --app <nom>, plutôt que d'en analyser une au hasard.",
@@ -305,9 +306,9 @@ const EN: Messages = {
   noIndexHtml: (p) => `no index.html under ${p}`,
   buildFailed: "the project's own build failed. Check that \"ng build\" works before scanning.",
   badWorkspace: (p) => `${p} is not valid JSON.`,
-  noApplication: 'angular.json declares no application, so there is nothing to scan.',
+  noApplication: 'this workspace declares no application, so there is nothing to scan.',
   unknownApplication: (n, available) =>
-    `unknown application "${n}". angular.json declares: ${available.join(', ')}.`,
+    `unknown application "${n}". This workspace declares: ${available.join(', ')}.`,
   ambiguousApplication: (available) =>
     `this workspace declares several applications: ${available.join(', ')}.\n` +
     'Pick the one to scan with --app <name>, rather than having one chosen at random.',

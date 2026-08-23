@@ -18,7 +18,7 @@ Commandes
 
 Options
   --project <dossier>   projet Angular à instrumenter et compiler
-  --app <nom>           application à analyser, si angular.json en déclare plusieurs
+  --app <nom>           application à analyser, si l'espace de travail en déclare plusieurs
   --route <chemin>      route à analyser en mode projet (répétable, / par défaut)
   --min-score <n>       échouer quand une page passe sous n
   --fail                sortir en 1 sur ce qui est trouvé (le défaut hors terminal, donc en CI)
@@ -69,7 +69,7 @@ Commands
 
 Options
   --project <dir>       Angular project to instrument and build
-  --app <name>          application to scan, when angular.json declares several
+  --app <name>          application to scan, in a workspace that declares several
   --route <path>        route to scan in project mode (repeatable, default /)
   --min-score <n>       fail when a page scores below n
   --fail                exit 1 on findings (the default outside a terminal, e.g. CI)

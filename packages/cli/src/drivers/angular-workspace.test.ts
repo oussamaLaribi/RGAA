@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { resolve } from 'node:path';
-import { pickShell, readApplications, selectApplication } from './angular-workspace.js';
+import {
+  pickShell,
+  readApplications,
+  selectApplication,
+  toApplication,
+} from './angular-workspace.js';
 
 const ROOT = resolve('/ws');
 const at = (...parts: string[]): string => resolve(ROOT, ...parts);
@@ -136,6 +141,59 @@ describe('readApplications', () => {
     expect(readApplications(ROOT, null)).toEqual([]);
     expect(readApplications(ROOT, {})).toEqual([]);
     expect(readApplications(ROOT, { projects: 'nope' })).toEqual([]);
+  });
+});
+
+describe('toApplication, on the Nx shape', () => {
+  // Taken from a real project.json in stefanoslig/angular-ngrx-nx-realworld:
+  // Nx keeps one of these per project instead of a central angular.json, and
+  // calls the builder an executor. Everything else is identical.
+  const conduit = {
+    name: 'conduit',
+    projectType: 'application',
+    sourceRoot: 'apps/conduit/src',
+    targets: {
+      build: {
+        executor: '@angular-devkit/build-angular:browser-esbuild',
+        options: { outputPath: 'dist/apps/conduit' },
+        configurations: { production: {}, development: {} },
+      },
+    },
+  };
+
+  it('reads an Nx project as readily as an Angular one', () => {
+    const app = toApplication(ROOT, 'conduit', conduit);
+
+    expect(app?.sourceRoot).toBe(at('apps', 'conduit', 'src'));
+    expect(app?.outputBase).toBe(at('dist', 'apps', 'conduit'));
+    expect(app?.configurations).toEqual(['production', 'development']);
+  });
+
+  it('does not add browser/ for the esbuild drop-in', () => {
+    // `browser-esbuild` replaces `browser` and writes to outputPath directly.
+    // Only `:application` splits its output, so matching on the package name
+    // rather than the suffix would point at a directory that never exists.
+    expect(toApplication(ROOT, 'conduit', conduit)?.outputBase).toBe(
+      at('dist', 'apps', 'conduit'),
+    );
+  });
+
+  it('skips a project that declares no build target', () => {
+    // Nx marks every end-to-end suite as projectType "application". Offering
+    // one as a scan target would put a Cypress project, which produces nothing
+    // to serve, next to the real app in the list.
+    const e2e = {
+      name: 'conduit-e2e',
+      projectType: 'application',
+      targets: { e2e: { executor: '@nx/cypress:cypress' } },
+    };
+
+    expect(toApplication(ROOT, 'conduit-e2e', e2e)).toBeNull();
+  });
+
+  it('refuses anything that is not an application', () => {
+    expect(toApplication(ROOT, 'ui', { projectType: 'library', targets: { build: {} } })).toBeNull();
+    expect(toApplication(ROOT, 'x', null)).toBeNull();
   });
 });
 

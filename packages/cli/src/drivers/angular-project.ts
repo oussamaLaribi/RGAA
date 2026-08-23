@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import type { Dirent } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { instrumentTemplates, type InstrumentationSession } from '@rgaa-source/angular';
 import { serveDirectory, type StaticSite } from './static-server.js';
 import { resolveProjectBin, runNodeScript } from './run-command.js';
@@ -7,6 +8,7 @@ import {
   pickShell,
   readApplications,
   selectApplication,
+  toApplication,
   type AngularApplication,
 } from './angular-workspace.js';
 
@@ -49,7 +51,7 @@ async function findTemplates(sourceRoot: string): Promise<string[]> {
 }
 
 /**
- * Locate the build output at the path `angular.json` declares.
+ * Locate the build output at the path the workspace declares.
  *
  * The directory is read rather than trusted outright: a stale or partial build
  * leaves the path valid and its contents wrong, and "no index.html here" is a
@@ -74,28 +76,89 @@ async function findBuildOutput(
   return dirname(shell);
 }
 
+/** Read one JSON file, blaming the file rather than the tool when it is broken. */
+async function readJson(path: string, options: PrepareOptions): Promise<unknown> {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'));
+  } catch {
+    throw new Error(options.errors?.badWorkspace(path) ?? `${path} is not valid JSON`);
+  }
+}
+
 /**
- * Read `angular.json` and settle on one application before anything is touched.
+ * Every application in an Nx workspace, which keeps one `project.json` per
+ * project instead of a central file.
+ *
+ * Nx is common in exactly the organisations a French accessibility obligation
+ * applies to, and it has no `angular.json` at all — so without this the tool
+ * refuses the whole category with "this is not an Angular project", which is
+ * both wrong and unhelpful.
+ *
+ * The search is bounded to three levels. Nx puts projects under `apps/` and
+ * `libs/` by convention but does not enforce it, and walking an entire
+ * repository to find configuration files would be slow and full of surprises.
+ */
+async function readNxApplications(
+  root: string,
+  options: PrepareOptions,
+): Promise<AngularApplication[]> {
+  const found: AngularApplication[] = [];
+
+  const walk = async (directory: string, depth: number): Promise<void> => {
+    if (depth > 3) return;
+
+    let entries: Dirent[];
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      const path = join(directory, entry.name);
+
+      if (entry.isFile() && entry.name === 'project.json') {
+        const project = await readJson(path, options);
+        // Nx allows the name to be omitted, in which case it is the directory.
+        const name =
+          typeof (project as { name?: unknown })?.name === 'string'
+            ? ((project as { name: string }).name)
+            : basename(directory);
+
+        const application = toApplication(root, name, project);
+        if (application) found.push(application);
+        continue;
+      }
+
+      // node_modules holds thousands of project.json files that are not ours.
+      if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
+        await walk(path, depth + 1);
+      }
+    }
+  };
+
+  await walk(root, 0);
+  return found;
+}
+
+/**
+ * Settle on one application before anything is touched.
  *
  * Done up front, so a workspace we cannot make sense of fails before a single
  * template has been rewritten.
  */
 async function resolveApplication(
-  workspacePath: string,
+  workspacePath: string | null,
   root: string,
   options: PrepareOptions,
 ): Promise<AngularApplication> {
-  let workspace: unknown;
-  try {
-    workspace = JSON.parse(await readFile(workspacePath, 'utf8'));
-  } catch {
-    throw new Error(
-      options.errors?.badWorkspace(workspacePath) ?? `${workspacePath} is not valid JSON`,
-    );
-  }
+  const applications =
+    workspacePath === null
+      ? await readNxApplications(root, options)
+      : readApplications(root, await readJson(workspacePath, options));
 
-  const application = selectApplication(readApplications(root, workspace), options.app, {
-    noApplication: options.errors?.noApplication ?? 'angular.json declares no application',
+  const application = selectApplication(applications, options.app, {
+    noApplication: options.errors?.noApplication ?? 'this workspace declares no application',
     unknownApplication:
       options.errors?.unknownApplication ??
       ((name, available): string => `unknown application "${name}". Available: ${available.join(', ')}`),
@@ -154,15 +217,24 @@ export async function prepareProject(
   const root = resolve(projectRoot);
   const report = options.onProgress ?? ((): void => {});
 
-  const workspacePath = join(root, 'angular.json');
-  if (!(await exists(workspacePath))) {
+  // Two shapes are accepted: a central `angular.json`, and an Nx workspace,
+  // which has none and keeps a `project.json` beside each project instead.
+  const angularJson = join(root, 'angular.json');
+  const isAngularWorkspace = await exists(angularJson);
+  const isNxWorkspace = !isAngularWorkspace && (await exists(join(root, 'nx.json')));
+
+  if (!isAngularWorkspace && !isNxWorkspace) {
     throw new Error(
       options.errors?.notAngular(root) ??
         `${root} does not look like an Angular project (no angular.json)`,
     );
   }
 
-  const application = await resolveApplication(workspacePath, root, options);
+  const application = await resolveApplication(
+    isAngularWorkspace ? angularJson : null,
+    root,
+    options,
+  );
 
   let session: InstrumentationSession | null = null;
   let instrumented = 0;
@@ -186,8 +258,14 @@ export async function prepareProject(
 
     try {
       report(options.labels?.building ?? 'building');
-      const ngCli = resolveProjectBin(root, '@angular/cli/bin/ng.js');
-      // Name the application: in a workspace with several, a bare `ng build`
+      // Nx workspaces are driven by the Nx CLI. `ng build` may exist there too,
+      // but only when @nx/angular installed it, so relying on it would work on
+      // some Nx projects and fail on others for no reason the user can see.
+      const cli = isNxWorkspace
+        ? resolveProjectBin(root, 'nx/bin/nx.js')
+        : resolveProjectBin(root, '@angular/cli/bin/ng.js');
+
+      // Name the application: in a workspace with several, a bare `build`
       // either picks the default or refuses, and neither is what was asked for.
       //
       // `development` is requested only when it exists. It is what `ng new`
@@ -200,7 +278,7 @@ export async function prepareProject(
 
       try {
         await runNodeScript(
-          ngCli,
+          cli,
           buildArgs,
           root,
           options.onBuildOutput ? { onOutput: options.onBuildOutput } : {},

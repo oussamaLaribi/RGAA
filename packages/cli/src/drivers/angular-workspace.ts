@@ -23,7 +23,10 @@ export interface AngularApplication {
 }
 
 interface RawTarget {
+  /** Angular's name for it. */
   builder?: unknown;
+  /** Nx's name for the same thing, in `project.json`. */
+  executor?: unknown;
   options?: { outputPath?: unknown };
   configurations?: Record<string, unknown>;
 }
@@ -37,10 +40,11 @@ interface RawProject {
 }
 
 /**
- * Builders that split their output, putting the browser bundle in a
- * subdirectory. The older `:browser` builder writes straight into `outputPath`.
+ * Builders that split their output, putting the browser bundle in a `browser`
+ * subdirectory. `:browser` and `:browser-esbuild` write straight into
+ * `outputPath`, so the suffix is what distinguishes them, not the package.
  */
-const SPLIT_OUTPUT = /:(application|ssr-dev-server)$/;
+const SPLIT_OUTPUT = /:application$/;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -54,7 +58,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  */
 function resolveOutput(root: string, name: string, target: RawTarget | undefined): string {
   const raw = target?.options?.outputPath;
-  const builder = typeof target?.builder === 'string' ? target.builder : '';
+  const declared = target?.builder ?? target?.executor;
+  const builder = typeof declared === 'string' ? declared : '';
 
   if (isRecord(raw)) {
     const base = typeof raw['base'] === 'string' ? raw['base'] : join('dist', name);
@@ -69,32 +74,51 @@ function resolveOutput(root: string, name: string, target: RawTarget | undefined
   return resolve(root, SPLIT_OUTPUT.test(builder) ? join(base, 'browser') : base);
 }
 
-/** Every application the workspace declares. Libraries are skipped: nothing to serve. */
+/**
+ * Turn one project entry into an application, or null when it is not one we can
+ * scan.
+ *
+ * Shared between `angular.json` and Nx's per-project `project.json`, whose
+ * entries have the same shape down to the key names — Nx only calls the builder
+ * an `executor`.
+ *
+ * A project with no build target is skipped even when it calls itself an
+ * application: Nx gives every end-to-end suite `projectType: "application"`, and
+ * including those would offer the user a choice between their app and a Cypress
+ * project that produces nothing to serve.
+ */
+export function toApplication(
+  root: string,
+  name: string,
+  value: unknown,
+): AngularApplication | null {
+  if (!isRecord(value)) return null;
+  const project = value as RawProject;
+  if (project.projectType !== 'application') return null;
+
+  const build = (project.targets ?? project.architect ?? {})['build'];
+  if (!build) return null;
+
+  const projectRoot = typeof project.root === 'string' ? project.root : '';
+
+  return {
+    name,
+    sourceRoot: resolve(
+      root,
+      typeof project.sourceRoot === 'string' ? project.sourceRoot : join(projectRoot, 'src'),
+    ),
+    outputBase: resolveOutput(root, name, build),
+    configurations: Object.keys(build.configurations ?? {}),
+  };
+}
+
+/** Every application `angular.json` declares. Libraries are skipped: nothing to serve. */
 export function readApplications(root: string, workspace: unknown): AngularApplication[] {
   if (!isRecord(workspace) || !isRecord(workspace['projects'])) return [];
 
-  const applications: AngularApplication[] = [];
-
-  for (const [name, value] of Object.entries(workspace['projects'])) {
-    if (!isRecord(value)) continue;
-    const project = value as RawProject;
-    if (project.projectType !== 'application') continue;
-
-    const projectRoot = typeof project.root === 'string' ? project.root : '';
-    const build = (project.targets ?? project.architect ?? {})['build'];
-
-    applications.push({
-      name,
-      sourceRoot: resolve(
-        root,
-        typeof project.sourceRoot === 'string' ? project.sourceRoot : join(projectRoot, 'src'),
-      ),
-      outputBase: resolveOutput(root, name, build),
-      configurations: Object.keys(build?.configurations ?? {}),
-    });
-  }
-
-  return applications;
+  return Object.entries(workspace['projects'])
+    .map(([name, value]) => toApplication(root, name, value))
+    .filter((application): application is AngularApplication => application !== null);
 }
 
 /**
