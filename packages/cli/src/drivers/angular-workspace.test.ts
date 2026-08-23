@@ -192,6 +192,18 @@ describe('readApplications', () => {
     expect(readApplications(ROOT, {})).toEqual([]);
     expect(readApplications(ROOT, { projects: 'nope' })).toEqual([]);
   });
+
+  it('returns nothing for an angular.json that declares no project at all', () => {
+    // ever-gauzy ships exactly this: an angular.json whose "projects" is empty,
+    // kept only to configure the CLI and its schematics, while every real
+    // project is declared in an Nx project.json beside it. The driver therefore
+    // has to read both shapes rather than take this file's presence as the
+    // answer — an empty result here is correct, not a failure.
+    expect(
+      readApplications(ROOT, { cli: { packageManager: 'yarn' }, projects: {} }),
+    ).toEqual([]);
+    expect(readSourceRoots(ROOT, { projects: {} })).toEqual([]);
+  });
 });
 
 describe('toApplication, on the Nx shape', () => {

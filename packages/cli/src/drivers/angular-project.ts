@@ -202,14 +202,26 @@ interface ResolvedWorkspace {
 
 async function resolveApplication(
   workspacePath: string | null,
+  nx: boolean,
   root: string,
   options: PrepareOptions,
 ): Promise<ResolvedWorkspace> {
+  // Both shapes are read when both are present, rather than one excluding the
+  // other. ever-gauzy ships an angular.json whose "projects" is empty — it
+  // exists only to configure the CLI — while every real project is declared in
+  // an Nx project.json. Treating the file's presence as the answer reported
+  // "this workspace declares no application" on a workspace full of them.
   const workspace = workspacePath === null ? null : await readJson(workspacePath, options);
-  const applications =
-    workspace === null
-      ? await readNxApplications(root, options)
-      : readApplications(root, workspace);
+
+  const declared = workspace === null ? [] : readApplications(root, workspace);
+  const fromNx = nx ? await readNxApplications(root, options) : [];
+
+  const applications = [...declared];
+  for (const candidate of fromNx) {
+    if (!applications.some((existing) => existing.name === candidate.name)) {
+      applications.push(candidate);
+    }
+  }
 
   const application = selectApplication(applications, options.app, {
     noApplication: options.errors?.noApplication ?? 'this workspace declares no application',
@@ -228,13 +240,15 @@ async function resolveApplication(
     );
   }
 
-  const declared =
-    workspace === null ? await readNxSourceRoots(root, options) : readSourceRoots(root, workspace);
+  const roots = [
+    ...(workspace === null ? [] : readSourceRoots(root, workspace)),
+    ...(nx ? await readNxSourceRoots(root, options) : []),
+  ];
 
   // The application's own root is always included, even when the workspace
   // never named it: a project may declare no sourceRoot at all.
   const sourceRoots: string[] = [];
-  for (const candidate of [application.sourceRoot, ...declared]) {
+  for (const candidate of [application.sourceRoot, ...roots]) {
     if (!sourceRoots.includes(candidate) && (await exists(candidate))) sourceRoots.push(candidate);
   }
 
@@ -286,7 +300,7 @@ export async function prepareProject(
   // which has none and keeps a `project.json` beside each project instead.
   const angularJson = join(root, 'angular.json');
   const isAngularWorkspace = await exists(angularJson);
-  const isNxWorkspace = !isAngularWorkspace && (await exists(join(root, 'nx.json')));
+  const isNxWorkspace = await exists(join(root, 'nx.json'));
 
   if (!isAngularWorkspace && !isNxWorkspace) {
     throw new Error(
@@ -297,6 +311,7 @@ export async function prepareProject(
 
   const { application, sourceRoots } = await resolveApplication(
     isAngularWorkspace ? angularJson : null,
+    isNxWorkspace,
     root,
     options,
   );
