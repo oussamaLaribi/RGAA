@@ -148,6 +148,35 @@ export function readApplications(root: string, workspace: unknown): AngularAppli
 }
 
 /**
+ * Where a project keeps its sources, whatever kind of project it is.
+ *
+ * Libraries matter here even though they cannot be served. One application is
+ * built, but the markup that reaches the page comes from everything it imports —
+ * and in an Nx workspace that is most of the code: angular-ngrx-nx-realworld
+ * keeps 35 component files in `libs/` against 7 in `apps/`. Instrumenting only
+ * the application left five components in six untraceable.
+ */
+export function toSourceRoot(root: string, value: unknown): string | null {
+  if (!isRecord(value)) return null;
+  const project = value as RawProject;
+
+  if (typeof project.sourceRoot === 'string') return resolve(root, project.sourceRoot);
+  if (typeof project.root === 'string') return resolve(root, join(project.root, 'src'));
+  return null;
+}
+
+/** Every source root in an `angular.json` workspace, applications and libraries alike. */
+export function readSourceRoots(root: string, workspace: unknown): string[] {
+  if (!isRecord(workspace) || !isRecord(workspace['projects'])) return [];
+
+  return [...new Set(
+    Object.values(workspace['projects'])
+      .map((value) => toSourceRoot(root, value))
+      .filter((path): path is string => path !== null),
+  )];
+}
+
+/**
  * Pick the application to scan.
  *
  * Ambiguity is an error rather than a choice. Scanning the wrong application of

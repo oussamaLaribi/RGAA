@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import {
   pickShell,
   readApplications,
+  readSourceRoots,
   selectApplication,
   toApplication,
 } from './angular-workspace.js';
@@ -243,6 +244,46 @@ describe('toApplication, on the Nx shape', () => {
   it('refuses anything that is not an application', () => {
     expect(toApplication(ROOT, 'ui', { projectType: 'library', targets: { build: {} } })).toBeNull();
     expect(toApplication(ROOT, 'x', null)).toBeNull();
+  });
+});
+
+describe('readSourceRoots', () => {
+  it('includes libraries, whose markup reaches the page too', () => {
+    // Measured on angular-ngrx-nx-realworld: 35 component files in libs/ against
+    // 7 in apps/. Instrumenting only the application left five components in six
+    // with no source location at all.
+    const roots = readSourceRoots(
+      ROOT,
+      workspace({
+        conduit: application({}, { root: 'apps/conduit', sourceRoot: 'apps/conduit/src' }),
+        'feature-home': { projectType: 'library', root: 'libs/home', sourceRoot: 'libs/home/src' },
+      }),
+    );
+
+    expect(roots).toEqual([at('apps', 'conduit', 'src'), at('libs', 'home', 'src')]);
+  });
+
+  it('derives a root that was never declared', () => {
+    const roots = readSourceRoots(ROOT, workspace({ ui: { projectType: 'library', root: 'libs/ui' } }));
+
+    expect(roots).toEqual([at('libs', 'ui', 'src')]);
+  });
+
+  it('lists each root once, however many projects share it', () => {
+    const roots = readSourceRoots(
+      ROOT,
+      workspace({
+        a: application({}, { sourceRoot: 'src' }),
+        b: { projectType: 'library', sourceRoot: 'src' },
+      }),
+    );
+
+    expect(roots).toEqual([at('src')]);
+  });
+
+  it('skips a project that says nothing about where its sources are', () => {
+    expect(readSourceRoots(ROOT, workspace({ ghost: { projectType: 'library' } }))).toEqual([]);
+    expect(readSourceRoots(ROOT, null)).toEqual([]);
   });
 });
 

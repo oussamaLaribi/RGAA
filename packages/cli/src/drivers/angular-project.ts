@@ -7,8 +7,10 @@ import { resolveProjectBin, runNodeScript } from './run-command.js';
 import {
   pickShell,
   readApplications,
+  readSourceRoots,
   selectApplication,
   toApplication,
+  toSourceRoot,
   type AngularApplication,
 } from './angular-workspace.js';
 
@@ -119,6 +121,32 @@ async function readNxApplications(
 ): Promise<AngularApplication[]> {
   const found: AngularApplication[] = [];
 
+  await forEachNxProject(root, options, (name, project) => {
+    const application = toApplication(root, name, project);
+    if (application) found.push(application);
+  });
+
+  return found;
+}
+
+/** Every source root in an Nx workspace, libraries very much included. */
+async function readNxSourceRoots(root: string, options: PrepareOptions): Promise<string[]> {
+  const found: string[] = [];
+
+  await forEachNxProject(root, options, (_name, project) => {
+    const sourceRoot = toSourceRoot(root, project);
+    if (sourceRoot !== null && !found.includes(sourceRoot)) found.push(sourceRoot);
+  });
+
+  return found;
+}
+
+/** Visit every `project.json` in the workspace, once. */
+async function forEachNxProject(
+  root: string,
+  options: PrepareOptions,
+  visit: (name: string, project: unknown) => void,
+): Promise<void> {
   const walk = async (directory: string, depth: number): Promise<void> => {
     if (depth > 3) return;
 
@@ -140,8 +168,7 @@ async function readNxApplications(
             ? ((project as { name: string }).name)
             : basename(directory);
 
-        const application = toApplication(root, name, project);
-        if (application) found.push(application);
+        visit(name, project);
         continue;
       }
 
@@ -153,7 +180,6 @@ async function readNxApplications(
   };
 
   await walk(root, 0);
-  return found;
 }
 
 /**
@@ -162,15 +188,28 @@ async function readNxApplications(
  * Done up front, so a workspace we cannot make sense of fails before a single
  * template has been rewritten.
  */
+interface ResolvedWorkspace {
+  application: AngularApplication;
+  /**
+   * Every source root whose markup can reach the built page.
+   *
+   * One application is built, but what renders comes from everything it
+   * imports. In an Nx workspace that is most of the code, so instrumenting only
+   * the application leaves the majority of components untraceable.
+   */
+  sourceRoots: string[];
+}
+
 async function resolveApplication(
   workspacePath: string | null,
   root: string,
   options: PrepareOptions,
-): Promise<AngularApplication> {
+): Promise<ResolvedWorkspace> {
+  const workspace = workspacePath === null ? null : await readJson(workspacePath, options);
   const applications =
-    workspacePath === null
+    workspace === null
       ? await readNxApplications(root, options)
-      : readApplications(root, await readJson(workspacePath, options));
+      : readApplications(root, workspace);
 
   const application = selectApplication(applications, options.app, {
     noApplication: options.errors?.noApplication ?? 'this workspace declares no application',
@@ -189,7 +228,17 @@ async function resolveApplication(
     );
   }
 
-  return application;
+  const declared =
+    workspace === null ? await readNxSourceRoots(root, options) : readSourceRoots(root, workspace);
+
+  // The application's own root is always included, even when the workspace
+  // never named it: a project may declare no sourceRoot at all.
+  const sourceRoots: string[] = [];
+  for (const candidate of [application.sourceRoot, ...declared]) {
+    if (!sourceRoots.includes(candidate) && (await exists(candidate))) sourceRoots.push(candidate);
+  }
+
+  return { application, sourceRoots };
 }
 
 export interface PrepareOptions {
@@ -246,7 +295,7 @@ export async function prepareProject(
     );
   }
 
-  const application = await resolveApplication(
+  const { application, sourceRoots } = await resolveApplication(
     isAngularWorkspace ? angularJson : null,
     root,
     options,
@@ -259,7 +308,7 @@ export async function prepareProject(
   let recovered: string[] = [];
 
   if (!options.reuseBuild) {
-    const templates = await findTemplates(application.sourceRoot);
+    const templates = (await Promise.all(sourceRoots.map(findTemplates))).flat();
     templateCount = templates.length;
 
     report(
