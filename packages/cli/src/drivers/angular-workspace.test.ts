@@ -48,6 +48,24 @@ describe('readApplications', () => {
     expect(flat[0]?.outputBase).toBe(at('dist', 'shop'));
   });
 
+  it('handles a third-party builder, since the suffix is what decides', () => {
+    // DSpace builds with @angular-builders/custom-webpack:browser. Recognising
+    // builders by package would refuse everything outside Angular's own; the
+    // suffix is the part that says how the output is laid out, and third-party
+    // builders keep it precisely so the rest of the toolchain still works.
+    const [app] = readApplications(
+      ROOT,
+      workspace({
+        dspace: application({
+          builder: '@angular-builders/custom-webpack:browser',
+          options: { outputPath: 'dist/browser' },
+        }),
+      }),
+    );
+
+    expect(app?.outputBase).toBe(at('dist', 'browser'));
+  });
+
   it('reads the object form of outputPath introduced in Angular 17', () => {
     const [app] = readApplications(
       ROOT,
