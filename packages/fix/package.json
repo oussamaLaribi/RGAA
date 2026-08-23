@@ -1,6 +1,6 @@
 {
   "name": "@rgaa-source/fix",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rgaa-source/core": "^0.1.1"
+    "@rgaa-source/core": "^0.2.0"
   },
   "description": "Applies accessibility fixes back to Angular source, classified by how much human judgement they need.",
   "keywords": [

@@ -98,6 +98,27 @@ Options principales : `--route` (répétable), `--min-score`, `--json`, `--html`
 application, dans un espace de travail qui en déclare plusieurs), `--config`,
 `--no-config`. `rgaa-source --help` les liste toutes.
 
+### Espaces de travail
+
+Les deux dispositions sont lues.
+
+**`angular.json`**, avec une application ou plusieurs. Quand un espace de travail
+en déclare plusieurs, `--app <nom>` dit laquelle analyser ; sans lui l'exécution
+s'arrête et les liste plutôt que d'en choisir une au hasard — un rapport complet
+et plausible sur du code que personne n'a demandé est un échec qui peut passer
+inaperçu.
+
+**Nx**, qui n'a pas d'`angular.json` du tout et garde un `project.json` à côté de
+chaque projet. Ses **bibliothèques sont instrumentées aussi** : on compile une
+application, mais le balisage qui atteint la page vient de tout ce qu'elle
+importe, et dans un espace Nx c'est l'essentiel du code. La compilation passe
+alors par le CLI de Nx.
+
+Les chemins sont lus et non supposés — `sourceRoot`, `outputPath` sous chacune de
+ses trois formes, et la surcharge qu'une configuration de compilation lui
+applique. Un espace de travail qui conserve les deux fichiers, comme certains
+dépôts Nx, est lu des deux côtés.
+
 ### Fichier de configuration
 
 `rgaa.config.json`, à côté du `package.json` :
@@ -339,9 +360,10 @@ correcteur, et les principes à respecter sont dans
 
 ## État du projet
 
-Version **0.1.1**, première publication. Le pont — la localisation d'une
-violation jusqu'à sa ligne de code — est vérifié à chaque intégration contre une
-compilation Angular réelle, et validé sur deux projets open source.
+Version **0.2.0**. Le pont — la localisation d'une violation jusqu'à sa ligne de
+code — est vérifié à chaque intégration contre une compilation Angular réelle, et
+validé sur six projets open source : DSpace, CoreUI, ngx-admin, RealWorld et deux
+monorepos Nx.
 
 **Testé sur Angular 15, 16, 17, 19, 21 et 22** — mêmes lignes, mêmes colonnes,
 même score sur les six. L'analyse des templates s'appuie sur le compilateur
@@ -362,7 +384,8 @@ outil.
 - **Angular seulement** pour l'instant. Le cœur, les correctifs et les rapports
   ne dépendent d'aucun framework : ajouter React ou Vue demande un adaptateur,
   pas une réécriture.
-- **Votre projet doit compiler.** L'outil instrumente puis lance `ng build`.
+- **Votre projet doit compiler.** L'outil instrumente, puis lance votre propre
+  compilation — `ng build`, ou `nx build` dans un espace de travail Nx.
 - **Les localisations n'existent que sur une compilation instrumentée.** Analyser
   une URL arbitraire rapporte les violations mais ne peut les rattacher à aucun
   fichier, et le rapport le dit.

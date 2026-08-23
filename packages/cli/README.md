@@ -28,10 +28,22 @@ templates were instrumented before the build.
 
 ## Options
 
-`--route <path>` (repeatable) · `--min-score <n>` · `--baseline <file>` ·
-`--html <file>` · `--grid <file>` · `--json <file>` · `--fix` ·
-`--fix-suggested` · `--dry-run` · `--browser <channel>` · `--lang <fr|en>` ·
-`--no-fail` · `--reuse-build` · `--force` · `--verbose`
+`--route <path>` (repeatable) · `--app <name>` · `--min-score <n>` ·
+`--baseline <file>` · `--html <file>` · `--grid <file>` · `--json <file>` ·
+`--fix` · `--fix-suggested` · `--dry-run` · `--browser <channel>` ·
+`--lang <fr|en>` · `--no-fail` · `--reuse-build` · `--force` · `--verbose`
+
+## Workspaces
+
+`angular.json` and Nx are both read. When a workspace declares several
+applications, `--app <name>` picks one; without it the run stops and lists them
+rather than scanning whichever the filesystem returned first.
+
+In an Nx workspace the libraries are instrumented too — one application is built,
+but the markup that reaches the page comes from everything it imports.
+
+Templates written inline in the `@Component` decorator are covered as well as
+those in `.html` files; their locations then point into the `.ts`.
 
 Output defaults to French, the reference frame's own language; `--lang en`
 switches everything — console, HTML, grid and JSON alike.

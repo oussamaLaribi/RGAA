@@ -1,6 +1,6 @@
 {
   "name": "@rgaa-source/angular",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rgaa-source/core": "^0.1.1",
+    "@rgaa-source/core": "^0.2.0",
     "@angular/compiler": "^22.0.0"
   },
   "description": "Rewrites Angular templates so every rendered element carries the file, line and column it was written at.",

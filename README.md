@@ -115,6 +115,24 @@ Main options: `--route` (repeatable), `--min-score`, `--json`, `--html`,
 a workspace that declares several), `--config`, `--no-config`.
 `rgaa-source --help` lists them all.
 
+### Workspaces
+
+Both layouts are read.
+
+**`angular.json`**, with one application or several. When a workspace declares
+more than one, `--app <name>` says which to scan; without it the run stops and
+lists them rather than picking at random — a full, plausible report about code
+nobody asked about is a failure that can go unnoticed.
+
+**Nx**, which has no `angular.json` at all and keeps a `project.json` beside each
+project. Its **libraries are instrumented too**: one application is built, but
+the markup that reaches the page comes from everything it imports, and in an Nx
+workspace that is most of the code. The build then runs through the Nx CLI.
+
+Paths are read rather than assumed — `sourceRoot`, `outputPath` in each of its
+three forms, and the override a build configuration applies to it. A workspace
+that keeps both files, as some Nx repositories do, is read from both.
+
 ### Configuration file
 
 `rgaa.config.json`, next to your `package.json`:
@@ -340,9 +358,9 @@ are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Project status
 
-Version **0.1.1**, first release. The bridge — locating a violation down to its
-line of code — is verified on every CI run against a real Angular build, and
-validated on two open source projects.
+Version **0.2.0**. The bridge — locating a violation down to its line of code —
+is verified on every CI run against a real Angular build, and validated on six
+open source projects: DSpace, CoreUI, ngx-admin, RealWorld and two Nx monorepos.
 
 **Tested on Angular 15, 16, 17, 19, 21 and 22** — same lines, same columns, same
 score on all six. Template parsing uses Angular 22's compiler, installed
@@ -361,7 +379,8 @@ tool.
 
 - **Angular only** for now. The core, the fixes and the reports depend on no
   framework: adding React or Vue takes an adapter, not a rewrite.
-- **Your project must build.** The tool instruments and then runs `ng build`.
+- **Your project must build.** The tool instruments, then runs your own build —
+  `ng build`, or `nx build` in an Nx workspace.
 - **Locations exist only on an instrumented build.** Scanning an arbitrary URL
   reports violations but cannot attach them to any file, and the report says so.
 - **Templates written inline** in the `@Component` decorator are covered as well
