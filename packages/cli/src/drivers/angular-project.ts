@@ -288,8 +288,8 @@ export async function prepareProject(
       // scaffolds, not something Angular guarantees, and passing an undeclared
       // configuration fails the build outright — on a project that builds fine.
       const buildArgs = ['build', application.name];
-      if (application.configurations.includes('development')) {
-        buildArgs.push('--configuration', 'development');
+      if (application.configuration !== null) {
+        buildArgs.push('--configuration', application.configuration);
       }
 
       try {

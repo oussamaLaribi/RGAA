@@ -18,8 +18,15 @@ export interface AngularApplication {
   sourceRoot: string;
   /** The directory its build writes into, `browser` subdirectory included. */
   outputBase: string;
-  /** Build configurations it declares, so we never pass one that is absent. */
-  configurations: string[];
+  /**
+   * The configuration the build will run with, or null to run with none.
+   *
+   * Carried on the application rather than decided again at build time: the
+   * output path depends on it, so the two deciding separately is a bug waiting
+   * to happen — we would look where one configuration writes and build with
+   * another.
+   */
+  configuration: string | null;
 }
 
 interface RawTarget {
@@ -56,8 +63,21 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * splitting `base` from the `browser` subdirectory. All three appear in the
  * wild, and the object form is the one a hand-written path check gets wrong.
  */
-function resolveOutput(root: string, name: string, target: RawTarget | undefined): string {
-  const raw = target?.options?.outputPath;
+function resolveOutput(
+  root: string,
+  name: string,
+  target: RawTarget | undefined,
+  /** The configuration the build will actually run with, if any. */
+  configuration: string | null,
+): string {
+  // A configuration overrides the base options — that is the whole point of one.
+  // Reading only `options` sends the scan to a directory the build never wrote:
+  // a project whose development configuration sets `dist/dev` builds fine and is
+  // then reported as having no build output at all.
+  const overrides = configuration === null ? undefined : target?.configurations?.[configuration];
+  const raw =
+    (isRecord(overrides) ? overrides['outputPath'] : undefined) ?? target?.options?.outputPath;
+
   const declared = target?.builder ?? target?.executor;
   const builder = typeof declared === 'string' ? declared : '';
 
@@ -101,14 +121,20 @@ export function toApplication(
 
   const projectRoot = typeof project.root === 'string' ? project.root : '';
 
+  // `development` when the project declares it — it is what `ng new` scaffolds
+  // and what a scan wants, since a production build strips what makes the
+  // output readable. It is not guaranteed to exist, and asking for an undeclared
+  // configuration fails the build outright, on a project that builds fine.
+  const configuration = build.configurations?.['development'] ? 'development' : null;
+
   return {
     name,
     sourceRoot: resolve(
       root,
       typeof project.sourceRoot === 'string' ? project.sourceRoot : join(projectRoot, 'src'),
     ),
-    outputBase: resolveOutput(root, name, build),
-    configurations: Object.keys(build.configurations ?? {}),
+    outputBase: resolveOutput(root, name, build, configuration),
+    configuration,
   };
 }
 

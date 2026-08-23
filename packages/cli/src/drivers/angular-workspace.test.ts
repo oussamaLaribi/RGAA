@@ -128,13 +128,62 @@ describe('readApplications', () => {
     expect(apps.map((a) => a.name)).toEqual(['shop']);
   });
 
-  it('reports the build configurations, so none is passed blindly', () => {
+  it('builds with development only when the project declares it', () => {
     const [app] = readApplications(
       ROOT,
       workspace({ shop: application({ configurations: { production: {} } }) }),
     );
 
-    expect(app?.configurations).toEqual(['production']);
+    expect(app?.configuration).toBeNull();
+  });
+
+  it('lets the build configuration override the output path', () => {
+    // Reported from a real project: the build announced `dist/dev` while the
+    // scan looked in `dist/<name>/browser` and declared there was no output at
+    // all. Overriding options is the entire purpose of a configuration, so
+    // reading only `options` describes a build that never ran.
+    const [app] = readApplications(
+      ROOT,
+      workspace({
+        angularexampleapp: application({
+          builder: '@angular/build:application',
+          options: { outputPath: 'dist/angularexampleapp' },
+          configurations: { development: { outputPath: 'dist/dev' }, production: {} },
+        }),
+      }),
+    );
+
+    expect(app?.configuration).toBe('development');
+    expect(app?.outputBase).toBe(at('dist', 'dev', 'browser'));
+  });
+
+  it('keeps the base output path when the configuration does not override it', () => {
+    const [app] = readApplications(
+      ROOT,
+      workspace({
+        shop: application({
+          options: { outputPath: 'dist/shop' },
+          configurations: { development: { sourceMap: true } },
+        }),
+      }),
+    );
+
+    expect(app?.outputBase).toBe(at('dist', 'shop'));
+  });
+
+  it('ignores a production override, since it never builds with it', () => {
+    const [app] = readApplications(
+      ROOT,
+      workspace({
+        shop: application({
+          options: { outputPath: 'dist/shop' },
+          configurations: { production: { outputPath: 'dist/prod' } },
+        }),
+      }),
+    );
+
+    expect(app?.configuration).toBeNull();
+    expect(app?.outputBase).toBe(at('dist', 'shop'));
   });
 
   it('treats a malformed workspace as having no applications', () => {
@@ -166,7 +215,7 @@ describe('toApplication, on the Nx shape', () => {
 
     expect(app?.sourceRoot).toBe(at('apps', 'conduit', 'src'));
     expect(app?.outputBase).toBe(at('dist', 'apps', 'conduit'));
-    expect(app?.configurations).toEqual(['production', 'development']);
+    expect(app?.configuration).toBe('development');
   });
 
   it('does not add browser/ for the esbuild drop-in', () => {
