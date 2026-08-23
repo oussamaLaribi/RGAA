@@ -364,8 +364,8 @@ tool.
 - **Your project must build.** The tool instruments and then runs `ng build`.
 - **Locations exist only on an instrumented build.** Scanning an arbitrary URL
   reports violations but cannot attach them to any file, and the report says so.
-- **Templates written inline** in the  decorator are covered as
-  well as those in  files: the locations then point into the .
+- **Templates written inline** in the `@Component` decorator are covered as well
+  as those in `.html` files; the locations then point into the `.ts`.
 - **What is produced at runtime cannot be located** — an avatar coming from an
   API, the contents of a third-party component. Those are listed separately
   rather than pinned to an approximate line.

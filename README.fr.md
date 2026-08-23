@@ -366,9 +366,9 @@ outil.
 - **Les localisations n'existent que sur une compilation instrumentée.** Analyser
   une URL arbitraire rapporte les violations mais ne peut les rattacher à aucun
   fichier, et le rapport le dit.
-- **Les templates écrits en ligne** dans le décorateur  sont
-  couverts comme ceux des fichiers  : les localisations pointent alors
-  dans le .
+- **Les templates écrits en ligne** dans le décorateur `@Component` sont couverts
+  comme ceux des fichiers `.html` ; les localisations pointent alors dans le
+  `.ts`.
 - **Ce qui est produit à l'exécution n'est pas localisable** — un avatar venu
   d'une API, le contenu d'un composant tiers. Ces cas sont listés à part plutôt
   que rattachés à une ligne approximative.
