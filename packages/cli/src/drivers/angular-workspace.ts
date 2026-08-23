@@ -119,8 +119,6 @@ export function toApplication(
   const build = (project.targets ?? project.architect ?? {})['build'];
   if (!build) return null;
 
-  const projectRoot = typeof project.root === 'string' ? project.root : '';
-
   // `development` when the project declares it — it is what `ng new` scaffolds
   // and what a scan wants, since a production build strips what makes the
   // output readable. It is not guaranteed to exist, and asking for an undeclared
@@ -129,10 +127,7 @@ export function toApplication(
 
   return {
     name,
-    sourceRoot: resolve(
-      root,
-      typeof project.sourceRoot === 'string' ? project.sourceRoot : join(projectRoot, 'src'),
-    ),
+    sourceRoot: sourceRootOf(root, project),
     outputBase: resolveOutput(root, name, build, configuration),
     configuration,
   };
@@ -158,11 +153,25 @@ export function readApplications(root: string, workspace: unknown): AngularAppli
  */
 export function toSourceRoot(root: string, value: unknown): string | null {
   if (!isRecord(value)) return null;
-  const project = value as RawProject;
+  return sourceRootOf(root, value as RawProject);
+}
 
-  if (typeof project.sourceRoot === 'string') return resolve(root, project.sourceRoot);
-  if (typeof project.root === 'string') return resolve(root, join(project.root, 'src'));
-  return null;
+/**
+ * Where a project's sources are, by declaration or by Angular's own default.
+ *
+ * An empty `sourceRoot` is treated as absent rather than as a path. ngx-admin
+ * declares `sourceRoot: ""` on its end-to-end project; taken literally that is
+ * the repository root, and the walk went through node_modules — 6505 files
+ * instrumented instead of a few hundred. An empty `root`, by contrast, is
+ * perfectly normal: it is what a single-application workspace writes.
+ */
+function sourceRootOf(root: string, project: RawProject): string {
+  if (typeof project.sourceRoot === 'string' && project.sourceRoot !== '') {
+    return resolve(root, project.sourceRoot);
+  }
+
+  const projectRoot = typeof project.root === 'string' ? project.root : '';
+  return resolve(root, join(projectRoot, 'src'));
 }
 
 /** Every source root in an `angular.json` workspace, applications and libraries alike. */

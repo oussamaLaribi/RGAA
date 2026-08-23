@@ -293,6 +293,31 @@ describe('readSourceRoots', () => {
     expect(roots).toEqual([at('apps', 'conduit', 'src'), at('libs', 'home', 'src')]);
   });
 
+  it('refuses to read an empty sourceRoot as the repository root', () => {
+    // ngx-admin declares `sourceRoot: ""` on its end-to-end project. Taken
+    // literally that is the repository itself: the walk went into node_modules
+    // and instrumented 6505 files instead of 320, rewriting code the user does
+    // not own. An empty string is not a path.
+    const roots = readSourceRoots(
+      ROOT,
+      workspace({
+        demo: application({}, { root: '', sourceRoot: 'src' }),
+        'demo-e2e': application({}, { root: 'e2e', sourceRoot: '' }),
+      }),
+    );
+
+    expect(roots).not.toContain(ROOT);
+    expect(roots).toEqual([at('src'), at('e2e', 'src')]);
+  });
+
+  it('keeps an empty root, which is what a single-application workspace writes', () => {
+    // Only `sourceRoot` is suspect when empty. `root: ""` is the normal shape of
+    // an application at the top of its workspace, and must still yield src/.
+    expect(readSourceRoots(ROOT, workspace({ shop: { projectType: 'application', root: '' } }))).toEqual(
+      [at('src')],
+    );
+  });
+
   it('derives a root that was never declared', () => {
     const roots = readSourceRoots(ROOT, workspace({ ui: { projectType: 'library', root: 'libs/ui' } }));
 
@@ -311,9 +336,17 @@ describe('readSourceRoots', () => {
     expect(roots).toEqual([at('src')]);
   });
 
-  it('skips a project that says nothing about where its sources are', () => {
-    expect(readSourceRoots(ROOT, workspace({ ghost: { projectType: 'library' } }))).toEqual([]);
+  it('falls back to Angular own default for a project that declares nothing', () => {
+    // Not a guess worth refusing: it is the layout `ng new` produces, and the
+    // driver drops any root that does not exist before instrumenting anything.
+    expect(readSourceRoots(ROOT, workspace({ ghost: { projectType: 'library' } }))).toEqual([
+      at('src'),
+    ]);
+  });
+
+  it('reads nothing from a workspace that is not one', () => {
     expect(readSourceRoots(ROOT, null)).toEqual([]);
+    expect(readSourceRoots(ROOT, { projects: { broken: 'not an object' } })).toEqual([]);
   });
 });
 

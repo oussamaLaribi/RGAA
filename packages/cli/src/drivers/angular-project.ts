@@ -44,27 +44,62 @@ async function exists(path: string): Promise<boolean> {
  * blocks zoom — become traceable and fixable like any other markup. Excluding it
  * would put the most mechanically fixable violations out of reach.
  */
+/**
+ * Directories never worth walking, whatever a workspace claims its sources are.
+ *
+ * This is a safety net rather than an optimisation. ngx-admin declares
+ * `sourceRoot: ""` on its end-to-end project; read literally that is the
+ * repository root, and the walk went through `node_modules` — 6505 files
+ * rewritten instead of a few hundred, on code the user does not own. The
+ * declaration is fixed elsewhere, but no reading of any configuration file
+ * should ever be able to send this walk into a dependency again.
+ */
+const NEVER_WALK = new Set(['node_modules', 'dist', 'out-tsc', 'coverage', 'tmp']);
+
+function worthWalking(name: string): boolean {
+  // Dotted directories hold caches and version control, never templates: .git,
+  // .angular, .nx, .cache.
+  return !NEVER_WALK.has(name) && !name.startsWith('.');
+}
+
+function holdsTemplate(name: string): boolean {
+  if (name.endsWith('.html')) return true;
+
+  // Components may hold their template inline in the decorator rather than in a
+  // separate file. On angular-realworld-example-app that is 8 files out of 19,
+  // and skipping them left three findings in four with no location.
+  //
+  // Declaration files and specs are excluded: neither holds a template that
+  // reaches a browser, and rewriting a test is a good way to break one.
+  return name.endsWith('.ts') && !name.endsWith('.d.ts') && !name.endsWith('.spec.ts');
+}
+
 async function findTemplates(sourceRoot: string): Promise<string[]> {
-  const entries = await readdir(sourceRoot, { withFileTypes: true, recursive: true });
+  const found: string[] = [];
 
-  return entries
-    .filter((entry) => {
-      if (!entry.isFile()) return false;
-      if (entry.name.endsWith('.html')) return true;
+  // Walked by hand rather than with `recursive: true`, which offers no way to
+  // prune: the whole tree is read before anything can be filtered out.
+  const walk = async (directory: string): Promise<void> => {
+    let entries: Dirent[];
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
 
-      // Components may hold their template inline in the decorator rather than
-      // in a separate file. On angular-realworld-example-app that is 8 files out
-      // of 19, and skipping them left three findings in four with no location.
-      //
-      // Declaration files and specs are excluded: neither holds a template that
-      // reaches a browser, and rewriting a test is a good way to break one.
-      return (
-        entry.name.endsWith('.ts') &&
-        !entry.name.endsWith('.d.ts') &&
-        !entry.name.endsWith('.spec.ts')
-      );
-    })
-    .map((entry) => join(entry.parentPath, entry.name));
+    for (const entry of entries) {
+      const path = join(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        if (worthWalking(entry.name)) await walk(path);
+      } else if (entry.isFile() && holdsTemplate(entry.name)) {
+        found.push(path);
+      }
+    }
+  };
+
+  await walk(sourceRoot);
+  return found;
 }
 
 /**
