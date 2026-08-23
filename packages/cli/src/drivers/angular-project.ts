@@ -46,7 +46,22 @@ async function findTemplates(sourceRoot: string): Promise<string[]> {
   const entries = await readdir(sourceRoot, { withFileTypes: true, recursive: true });
 
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.html'))
+    .filter((entry) => {
+      if (!entry.isFile()) return false;
+      if (entry.name.endsWith('.html')) return true;
+
+      // Components may hold their template inline in the decorator rather than
+      // in a separate file. On angular-realworld-example-app that is 8 files out
+      // of 19, and skipping them left three findings in four with no location.
+      //
+      // Declaration files and specs are excluded: neither holds a template that
+      // reaches a browser, and rewriting a test is a good way to break one.
+      return (
+        entry.name.endsWith('.ts') &&
+        !entry.name.endsWith('.d.ts') &&
+        !entry.name.endsWith('.spec.ts')
+      );
+    })
     .map((entry) => join(entry.parentPath, entry.name));
 }
 
