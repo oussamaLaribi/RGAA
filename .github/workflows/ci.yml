@@ -38,6 +38,17 @@ jobs:
       - name: Tests
         run: npm test
 
+      # Again in French. The console language now follows the environment, and
+      # this runner has none set — so a test that quietly depends on the ambient
+      # locale passes here and fails on a French machine, or the reverse, which
+      # is exactly what happened when detection landed. Running the suite under
+      # both makes that dependency a failure rather than a surprise.
+      - name: Tests, sous une locale française
+        run: npm test
+        env:
+          LC_ALL: fr_FR.UTF-8
+          LANG: fr_FR.UTF-8
+
       # The bridge is the claim the whole product rests on, so it is verified
       # against a real Angular AOT build rather than only at the unit level.
       - name: Installer l'application de test

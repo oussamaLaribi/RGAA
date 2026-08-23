@@ -50,7 +50,7 @@ const result = (over: Partial<AuditResult> = {}): AuditResult => ({
 /** Colour is disabled outside a TTY, so assertions can match plain text. */
 describe('formatConsoleReport', () => {
   it('leads with the file and position, not a CSS selector', () => {
-    const output = formatConsoleReport([result({ violations: [violation()] })]);
+    const output = formatConsoleReport([result({ violations: [violation()] })], { lang: 'fr' });
 
     expect(output).toContain('src/app/app.html');
     expect(output).toContain('3:3');
@@ -64,7 +64,7 @@ describe('formatConsoleReport', () => {
         { selector: 'a', html: '<a></a>', source: { file: 'src/app/app.html', line: 20, column: 1 } },
       ],
     });
-    const output = formatConsoleReport([result({ violations: [late, violation()] })]);
+    const output = formatConsoleReport([result({ violations: [late, violation()] })], { lang: 'fr' });
 
     // Reads like a compiler's error list, top of file downwards.
     expect(output.indexOf('image-alt')).toBeLessThan(output.indexOf('link-name'));
@@ -74,7 +74,7 @@ describe('formatConsoleReport', () => {
     const untraceable = violation({
       targets: [{ selector: 'html > img', html: '<img>', source: null }],
     });
-    const output = formatConsoleReport([result({ violations: [untraceable] })]);
+    const output = formatConsoleReport([result({ violations: [untraceable] })], { lang: 'fr' });
 
     expect(output).toContain('non rattaché à un fichier source');
     expect(output).toContain('html > img');
@@ -88,7 +88,7 @@ describe('formatConsoleReport', () => {
         source: { file: 'src/app/app.html', line: index + 1, column: 1 },
       })),
     });
-    const output = formatConsoleReport([result({ violations: [many] })]);
+    const output = formatConsoleReport([result({ violations: [many] })], { lang: 'fr' });
 
     expect(output).toContain('4 autre(s) pour image-alt');
   });
@@ -101,7 +101,7 @@ describe('formatConsoleReport', () => {
         source: { file: 'src/app/app.html', line: index + 1, column: 1 },
       })),
     });
-    const output = formatConsoleReport([result({ violations: [many] })], { verbose: true });
+    const output = formatConsoleReport([result({ violations: [many] })], { verbose: true, lang: 'fr' });
 
     expect(output).not.toContain('more of');
     expect(output).toContain('9:1');
@@ -110,7 +110,7 @@ describe('formatConsoleReport', () => {
   it('always states that conformance is established by human audit', () => {
     // The regulated figure comes from a human audit; implying otherwise would be
     // a legally misleading claim, so it is said on every run.
-    const output = formatConsoleReport([result()]);
+    const output = formatConsoleReport([result()], { lang: 'fr' });
 
     expect(output).toContain("La conformité RGAA s'établit par un audit humain");
     expect(output).toContain('non un verdict rendu sur eux');
@@ -130,7 +130,7 @@ describe('formatConsoleReport', () => {
           silent: 104,
         },
       }),
-    ]);
+    ], { lang: 'fr' });
 
     expect(output).toContain('2 critère(s) examiné(s) sur 106');
     expect(output).toContain('104 hors de portée de tout contrôle automatique');
@@ -138,7 +138,7 @@ describe('formatConsoleReport', () => {
   });
 
   it('reports a clean page plainly', () => {
-    const output = formatConsoleReport([result()]);
+    const output = formatConsoleReport([result()], { lang: 'fr' });
     expect(output).toContain('aucune anomalie détectée automatiquement');
   });
 
@@ -149,7 +149,7 @@ describe('formatConsoleReport', () => {
           { ruleId: 'color-contrast', question: 'Check contrast', wcag: ['1.4.3'], rgaa: ['3.2'], targets: [] },
         ],
       }),
-    ]);
+    ], { lang: 'fr' });
 
     // Distinct from the criteria tally: this counts places to go and look.
     expect(output).toContain('1 point(s) à vérifier par un humain');

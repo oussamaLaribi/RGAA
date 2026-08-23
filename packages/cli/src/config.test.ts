@@ -3,10 +3,16 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONFIG_FILENAME, loadConfig, pick } from './config.js';
-import { messages, DEFAULT_LANG } from './i18n.js';
+import { messages } from './i18n.js';
 
-/** The wording is injected so the loader carries no language of its own. */
-const t = messages(DEFAULT_LANG);
+/**
+ * The wording is injected so the loader carries no language of its own.
+ *
+ * Pinned to French rather than taken from the detected default: these tests
+ * assert French sentences, and the default now follows the environment — so
+ * relying on it made them pass on a French machine and fail in CI.
+ */
+const t = messages('fr');
 
 let dir: string;
 
