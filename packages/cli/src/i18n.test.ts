@@ -1,15 +1,60 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { DEFAULT_LANG, messages, parseLang } from './i18n.js';
+import { DEFAULT_LANG, detectLang, messages, parseLang } from './i18n.js';
 import { loadAxeLocale, loadRuleLocale } from './locales.js';
 import { usage } from './usage.js';
 
+describe('language detection', () => {
+  it('speaks French to a French environment', () => {
+    expect(detectLang({ LANG: 'fr_FR.UTF-8' }, null)).toBe('fr');
+    expect(detectLang({ LC_ALL: 'fr-CA' }, null)).toBe('fr');
+    expect(detectLang({ LANG: 'FR' }, null)).toBe('fr');
+  });
+
+  it('falls back to English rather than to a language it does not have', () => {
+    expect(detectLang({ LANG: 'de_DE.UTF-8' }, null)).toBe('en');
+    expect(detectLang({ LANG: 'en_GB' }, null)).toBe('en');
+  });
+
+  it('follows POSIX precedence', () => {
+    // LC_ALL overrides everything below it. Reading LANG first would give French
+    // to someone who explicitly asked for German at a higher priority.
+    expect(detectLang({ LC_ALL: 'de_DE', LC_MESSAGES: 'fr_FR', LANG: 'fr_FR' }, null)).toBe('en');
+    expect(detectLang({ LC_MESSAGES: 'fr_FR', LANG: 'de_DE' }, null)).toBe('fr');
+  });
+
+  it('treats C and POSIX as a request for no localisation', () => {
+    // These are not languages. They mean "give me the untranslated original",
+    // which is English here — and they must not fall through to a lower
+    // variable, since they are a stated preference.
+    expect(detectLang({ LC_ALL: 'C', LANG: 'fr_FR' }, null)).toBe('en');
+    expect(detectLang({ LANG: 'POSIX' }, null)).toBe('en');
+  });
+
+  it('asks the operating system when no variable is set', () => {
+    // Windows leaves these variables unset, so this is the only signal there.
+    // Without it, every Windows user would get English whatever their machine
+    // is configured to — which is most of the point of detecting at all.
+    expect(detectLang({}, 'fr-FR')).toBe('fr');
+    expect(detectLang({}, 'de-DE')).toBe('en');
+  });
+
+  it('lets the environment override the operating system', () => {
+    expect(detectLang({ LANG: 'de_DE.UTF-8' }, 'fr-FR')).toBe('en');
+    expect(detectLang({ LANG: 'fr_FR.UTF-8' }, 'de-DE')).toBe('fr');
+  });
+
+  it('lands on English when nothing says anything at all', () => {
+    // The common case in continuous integration. A French team that wants
+    // French reports there sets it in rgaa.config.json, where it belongs.
+    expect(detectLang({}, null)).toBe('en');
+    expect(detectLang({ LANG: '' }, null)).toBe('en');
+  });
+});
+
 describe('language selection', () => {
-  it('defaults to French', () => {
-    // The reference frame this tool implements is French, and so is its market;
-    // an English console around a French report was the incoherence to fix.
-    expect(DEFAULT_LANG).toBe('fr');
-    expect(parseLang(undefined)).toBe('fr');
+  it('uses the detected language when no flag is given', () => {
+    expect(parseLang(undefined)).toBe(DEFAULT_LANG);
   });
 
   it('accepts the two languages it actually has', () => {

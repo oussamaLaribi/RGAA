@@ -335,8 +335,73 @@ export function messages(lang: Lang): Messages {
   return lang === 'en' ? EN : FR;
 }
 
-/** French by default: the reference frame this tool implements is French. */
-export const DEFAULT_LANG: Lang = 'fr';
+/**
+ * Reduce a locale string to the language we would honour, or null when it names
+ * no language at all.
+ *
+ * `C` and `POSIX` are not languages: they mean "no localisation", which is a
+ * request for the untranslated original rather than a missing setting.
+ */
+function languageOf(locale: string): string | null {
+  const tag = (locale.split('.')[0] ?? '').split('@')[0] ?? '';
+  if (tag === '' || tag === 'C' || tag === 'POSIX') return null;
+  return (tag.replace('_', '-').split('-')[0] ?? '').toLowerCase();
+}
+
+/** What the operating system is set to, when no environment variable says. */
+function systemLocale(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale;
+  } catch {
+    // A runtime built without full ICU. Nothing to read, so nothing to honour.
+    return undefined;
+  }
+}
+
+/**
+ * The language the environment is asking for.
+ *
+ * The tool implements a French reference frame but is read by people who do not
+ * speak French, so neither language is right for everyone as a fixed default.
+ * The environment already carries the answer, and every other command-line tool
+ * reads it from there.
+ *
+ * POSIX precedence is followed — `LC_ALL` overrides `LC_MESSAGES`, which
+ * overrides `LANG` — and the first setting that names a language decides, even
+ * when that language is one we do not have. Someone whose `LC_ALL` says German
+ * has stated a preference; falling through to a lower-priority variable would
+ * answer a question they did not ask.
+ *
+ * Continuous integration usually sets none of these, so builds land on English.
+ * A French team that wants French reports in CI sets `"lang": "fr"` in
+ * `rgaa.config.json`, where it belongs: it is a property of the project.
+ */
+export function detectLang(
+  env: NodeJS.ProcessEnv = process.env,
+  /**
+   * Injected so this stays testable. Consulting the operating system is not a
+   * detail to drop: Windows leaves these variables unset, so without it every
+   * Windows user would get English whatever their machine is configured to.
+   *
+   * `null` and not `undefined` for "no system locale": passing `undefined`
+   * explicitly triggers the default parameter, so a caller asking for no
+   * detection would silently get detection anyway.
+   */
+  system: string | null = systemLocale() ?? null,
+): Lang {
+  for (const candidate of [env['LC_ALL'], env['LC_MESSAGES'], env['LANG'], system]) {
+    if (candidate === undefined || candidate === null || candidate === '') continue;
+
+    const language = languageOf(candidate);
+    if (language === null) return 'en';
+    return language === 'fr' ? 'fr' : 'en';
+  }
+
+  return 'en';
+}
+
+/** What the console speaks when nothing has said otherwise. */
+export const DEFAULT_LANG: Lang = detectLang();
 
 export function parseLang(value: string | undefined): Lang | null {
   if (value === undefined) return DEFAULT_LANG;

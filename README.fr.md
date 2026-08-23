@@ -133,10 +133,19 @@ ignorée** — une clé mal orthographiée avalée en silence est ce qui fait pe
 un après-midi. Un fichier illisible, en revanche, arrête l'exécution : c'est une
 erreur que son auteur veut connaître.
 
-**La sortie est en français**, y compris les messages d'axe-core, repris de sa
-traduction officielle. `--lang en` pour l'anglais. Tout est traduit dans la page
-avant production, donc la console, le rapport HTML, la grille et le JSON parlent
-la même langue sans double traduction.
+**La sortie suit votre environnement.** Un poste configuré en français obtient du
+français, messages d'axe-core compris, repris de sa traduction officielle ; tout
+le reste obtient l'anglais. `LC_ALL`, `LC_MESSAGES` et `LANG` sont lus dans
+l'ordre POSIX, puis le réglage du système lui-même — le seul signal disponible
+sous Windows, où ces variables ne sont généralement pas définies.
+
+`--lang` l'emporte sur tout. En intégration continue, aucune de ces variables
+n'est habituellement posée : les exécutions tombent donc sur l'anglais, et c'est
+`"lang"` dans le fichier de configuration qui fixe la langue pour l'équipe, là où
+ce choix appartient au projet.
+
+Tout est traduit dans la page avant production, donc la console, le rapport HTML,
+la grille et le JSON parlent la même langue sans double traduction.
 
 **Le code de sortie dépend du contexte.** Dans un terminal, l'analyse rapporte et
 sort en 0 : un humain qui explore un projet existant lit un code 1 comme un

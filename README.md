@@ -149,10 +149,19 @@ misspelled key swallowed in silence is how someone loses an afternoon. An
 unreadable file, by contrast, stops the run: that is a mistake its author wants
 to hear about.
 
-**Output defaults to French**, including axe-core's messages, taken from its
-official translation. Use `--lang en` for English. Everything is translated in
-the page before results are produced, so the console, the HTML report, the grid
-and the JSON all speak one language with no double translation.
+**Output follows your environment.** A machine set to French gets French,
+including axe-core's messages taken from its official translation; everything
+else gets English. `LC_ALL`, `LC_MESSAGES` and `LANG` are read in POSIX order,
+then the operating system's own setting — which is the only signal on Windows,
+where those variables are usually unset.
+
+`--lang` overrides all of it. In CI none of those variables is normally set, so
+builds land on English; a team that wants French reports there sets `"lang"` in
+the configuration file, where it belongs.
+
+Everything is translated in the page before results are produced, so the console,
+the HTML report, the grid and the JSON all speak one language with no double
+translation.
 
 **The exit code depends on context.** In a terminal, the scan reports and exits
 0: a human exploring an existing codebase reads exit 1 as a crash. Outside a
