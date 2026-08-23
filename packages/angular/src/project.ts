@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { join, relative, resolve } from 'node:path';
 import { injectSourceAttributes } from './inject-source.js';
@@ -42,6 +42,32 @@ interface BackupEntry {
   backup: string;
 }
 
+function manifestPath(directory: string): string {
+  return join(directory, 'manifest.jsonl');
+}
+
+/**
+ * Read the manifest, tolerating a line that was cut off.
+ *
+ * The last line is the one at risk: a process killed mid-append leaves it
+ * incomplete. Dropping it is right — the file it describes was recorded but not
+ * yet rewritten, since the entry is always written first.
+ */
+function parseManifest(content: string): BackupEntry[] {
+  const entries: BackupEntry[] = [];
+
+  for (const line of content.split('\n')) {
+    if (line.trim() === '') continue;
+    try {
+      entries.push(JSON.parse(line) as BackupEntry);
+    } catch {
+      // Only ever the truncated tail; earlier lines were flushed whole.
+    }
+  }
+
+  return entries;
+}
+
 /**
  * Put back anything a previous run left rewritten.
  *
@@ -54,7 +80,7 @@ interface BackupEntry {
 async function recoverPreviousRun(directory: string): Promise<string[]> {
   let manifest: BackupEntry[];
   try {
-    manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8')) as BackupEntry[];
+    manifest = parseManifest(await readFile(manifestPath(directory), 'utf8'));
   } catch {
     return [];
   }
@@ -121,10 +147,17 @@ export async function instrumentTemplates(
 
       // Park the original before the rewrite, and record it before writing, so
       // the manifest never describes less than what is actually modified.
+      //
+      // Appended one line at a time rather than rewritten whole. Serialising the
+      // growing array on every file is quadratic: on a project with 2752
+      // templates that is roughly 750 MB written to record 2752 entries, and it
+      // was most of what the step cost.
       const backup = join(directory, `${createHash('sha256').update(path).digest('hex')}.bak`);
       await writeFile(backup, source, 'utf8');
-      backups.push({ path, backup });
-      await writeFile(join(directory, 'manifest.json'), JSON.stringify(backups), 'utf8');
+
+      const entry = { path, backup };
+      backups.push(entry);
+      await appendFile(manifestPath(directory), `${JSON.stringify(entry)}\n`, 'utf8');
 
       await writeFile(path, result.code, 'utf8');
       files.push({ path, relativePath, injected: result.injected });
@@ -142,7 +175,7 @@ export async function instrumentTemplates(
 export async function hasPendingRestore(projectRoot: string): Promise<boolean> {
   try {
     const entries = await readdir(backupDirectory(resolve(projectRoot)));
-    return entries.includes('manifest.json');
+    return entries.includes('manifest.jsonl');
   } catch {
     return false;
   }
