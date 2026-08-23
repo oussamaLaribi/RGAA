@@ -358,7 +358,7 @@ are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Project status
 
-Version **0.2.0**. The bridge — locating a violation down to its line of code —
+Version **0.2.1**. The bridge — locating a violation down to its line of code —
 is verified on every CI run against a real Angular build, and validated on six
 open source projects: DSpace, CoreUI, ngx-admin, RealWorld and two Nx monorepos.
 

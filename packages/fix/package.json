@@ -1,6 +1,6 @@
 {
   "name": "@rgaa-source/fix",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,9 +27,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rgaa-source/core": "^0.2.0"
+    "@rgaa-source/core": "^0.2.1"
   },
-  "description": "Applies accessibility fixes back to Angular source, classified by how much human judgement they need.",
+  "description": "Applies RGAA and WCAG accessibility fixes back to the source line a violation came from.",
   "keywords": [
     "accessibility",
     "a11y",
@@ -38,7 +38,8 @@
     "angular",
     "axe-core",
     "audit",
-    "accessibilite"
+    "accessibilite",
+    "accessibility-testing"
   ],
   "repository": {
     "type": "git",

@@ -360,7 +360,7 @@ correcteur, et les principes à respecter sont dans
 
 ## État du projet
 
-Version **0.2.0**. Le pont — la localisation d'une violation jusqu'à sa ligne de
+Version **0.2.1**. Le pont — la localisation d'une violation jusqu'à sa ligne de
 code — est vérifié à chaque intégration contre une compilation Angular réelle, et
 validé sur six projets open source : DSpace, CoreUI, ngx-admin, RealWorld et deux
 monorepos Nx.

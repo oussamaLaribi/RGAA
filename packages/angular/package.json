@@ -1,6 +1,6 @@
 {
   "name": "@rgaa-source/angular",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,10 +27,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@rgaa-source/core": "^0.2.0",
+    "@rgaa-source/core": "^0.2.1",
     "@angular/compiler": "^22.0.0"
   },
-  "description": "Rewrites Angular templates so every rendered element carries the file, line and column it was written at.",
+  "description": "RGAA and WCAG accessibility instrumentation for Angular templates: rewrites them so every rendered element carries its source location.",
   "keywords": [
     "accessibility",
     "a11y",
@@ -39,7 +39,9 @@
     "angular",
     "axe-core",
     "audit",
-    "accessibilite"
+    "accessibilite",
+    "nx",
+    "accessibility-testing"
   ],
   "repository": {
     "type": "git",
