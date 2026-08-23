@@ -111,7 +111,8 @@ check.](https://raw.githubusercontent.com/oussamaLaribi/RGAA/main/docs/couvertur
 
 Main options: `--route` (repeatable), `--min-score`, `--json`, `--html`,
 `--grid`, `--baseline`, `--browser`, `--reuse-build`, `--force`, `--verbose`,
-`--violations-only` (faster, but disables scoring), `--config`, `--no-config`.
+`--violations-only` (faster, but disables scoring), `--app` (which application, in
+a workspace that declares several), `--config`, `--no-config`.
 `rgaa-source --help` lists them all.
 
 ### Configuration file

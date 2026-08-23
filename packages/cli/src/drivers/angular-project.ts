@@ -1,8 +1,14 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { instrumentTemplates, type InstrumentationSession } from '@rgaa-source/angular';
 import { serveDirectory, type StaticSite } from './static-server.js';
 import { resolveProjectBin, runNodeScript } from './run-command.js';
+import {
+  pickShell,
+  readApplications,
+  selectApplication,
+  type AngularApplication,
+} from './angular-workspace.js';
 
 export interface PreparedProject {
   site: StaticSite;
@@ -25,7 +31,8 @@ async function exists(path: string): Promise<boolean> {
 }
 
 /**
- * Every HTML file under `src`, the app shell included.
+ * Every HTML file under the application's own source root, the app shell
+ * included.
  *
  * `index.html` is worth instrumenting even though Angular never compiles it:
  * the build copies it through to the output, so the locations survive and the
@@ -41,27 +48,78 @@ async function findTemplates(sourceRoot: string): Promise<string[]> {
     .map((entry) => join(entry.parentPath, entry.name));
 }
 
-/** Locate the build output, which Angular writes to `dist/<project>/browser`. */
+/**
+ * Locate the build output at the path `angular.json` declares.
+ *
+ * The directory is read rather than trusted outright: a stale or partial build
+ * leaves the path valid and its contents wrong, and "no index.html here" is a
+ * far more actionable message than a scan of an empty site.
+ */
 async function findBuildOutput(
-  projectRoot: string,
+  outputBase: string,
   errors?: PrepareOptions['errors'],
 ): Promise<string> {
-  const distRoot = join(projectRoot, 'dist');
-  if (!(await exists(distRoot))) {
-    throw new Error(errors?.noBuildOutput(distRoot) ?? `no build output at ${distRoot}`);
+  if (!(await exists(outputBase))) {
+    throw new Error(errors?.noBuildOutput(outputBase) ?? `no build output at ${outputBase}`);
   }
 
-  const entries = await readdir(distRoot, { withFileTypes: true, recursive: true });
-  const shell = entries.find((entry) => entry.isFile() && entry.name === 'index.html');
-  if (!shell) throw new Error(errors?.noIndexHtml(distRoot) ?? `no index.html under ${distRoot}`);
+  const entries = await readdir(outputBase, { withFileTypes: true, recursive: true });
+  const html = entries
+    .filter((entry) => entry.isFile() && entry.name === 'index.html')
+    .map((entry) => join(entry.parentPath, entry.name));
 
-  return shell.parentPath;
+  const shell = pickShell(html);
+  if (!shell) throw new Error(errors?.noIndexHtml(outputBase) ?? `no index.html under ${outputBase}`);
+
+  return dirname(shell);
+}
+
+/**
+ * Read `angular.json` and settle on one application before anything is touched.
+ *
+ * Done up front, so a workspace we cannot make sense of fails before a single
+ * template has been rewritten.
+ */
+async function resolveApplication(
+  workspacePath: string,
+  root: string,
+  options: PrepareOptions,
+): Promise<AngularApplication> {
+  let workspace: unknown;
+  try {
+    workspace = JSON.parse(await readFile(workspacePath, 'utf8'));
+  } catch {
+    throw new Error(
+      options.errors?.badWorkspace(workspacePath) ?? `${workspacePath} is not valid JSON`,
+    );
+  }
+
+  const application = selectApplication(readApplications(root, workspace), options.app, {
+    noApplication: options.errors?.noApplication ?? 'angular.json declares no application',
+    unknownApplication:
+      options.errors?.unknownApplication ??
+      ((name, available): string => `unknown application "${name}". Available: ${available.join(', ')}`),
+    ambiguousApplication:
+      options.errors?.ambiguousApplication ??
+      ((available): string => `several applications, pick one with --app: ${available.join(', ')}`),
+  });
+
+  if (!(await exists(application.sourceRoot))) {
+    throw new Error(
+      options.errors?.noSourceRoot(application.sourceRoot) ??
+        `no source directory at ${application.sourceRoot}`,
+    );
+  }
+
+  return application;
 }
 
 export interface PrepareOptions {
   force?: boolean;
   /** Skip instrumentation and the build, and serve whatever is already in dist. */
   reuseBuild?: boolean;
+  /** Which application to scan, when the workspace declares several. */
+  app?: string;
   onProgress?: (message: string) => void;
   /** Wording for the three steps, so the driver says nothing in a fixed language. */
   labels?: { instrumenting: (count: number) => string; building: string; serving: (origin: string) => string };
@@ -71,6 +129,11 @@ export interface PrepareOptions {
     noBuildOutput: (path: string) => string;
     noIndexHtml: (path: string) => string;
     buildFailed: string;
+    badWorkspace: (path: string) => string;
+    noApplication: string;
+    unknownApplication: (name: string, available: string[]) => string;
+    ambiguousApplication: (available: string[]) => string;
+    noSourceRoot: (path: string) => string;
   };
   /** Echo the build output as it arrives. */
   onBuildOutput?: (chunk: string) => void;
@@ -91,12 +154,15 @@ export async function prepareProject(
   const root = resolve(projectRoot);
   const report = options.onProgress ?? ((): void => {});
 
-  if (!(await exists(join(root, 'angular.json')))) {
+  const workspacePath = join(root, 'angular.json');
+  if (!(await exists(workspacePath))) {
     throw new Error(
       options.errors?.notAngular(root) ??
         `${root} does not look like an Angular project (no angular.json)`,
     );
   }
+
+  const application = await resolveApplication(workspacePath, root, options);
 
   let session: InstrumentationSession | null = null;
   let instrumented = 0;
@@ -105,7 +171,7 @@ export async function prepareProject(
   let recovered: string[] = [];
 
   if (!options.reuseBuild) {
-    const templates = await findTemplates(join(root, 'src'));
+    const templates = await findTemplates(application.sourceRoot);
     templateCount = templates.length;
 
     report(
@@ -121,10 +187,21 @@ export async function prepareProject(
     try {
       report(options.labels?.building ?? 'building');
       const ngCli = resolveProjectBin(root, '@angular/cli/bin/ng.js');
+      // Name the application: in a workspace with several, a bare `ng build`
+      // either picks the default or refuses, and neither is what was asked for.
+      //
+      // `development` is requested only when it exists. It is what `ng new`
+      // scaffolds, not something Angular guarantees, and passing an undeclared
+      // configuration fails the build outright — on a project that builds fine.
+      const buildArgs = ['build', application.name];
+      if (application.configurations.includes('development')) {
+        buildArgs.push('--configuration', 'development');
+      }
+
       try {
         await runNodeScript(
           ngCli,
-          ['build', '--configuration', 'development'],
+          buildArgs,
           root,
           options.onBuildOutput ? { onOutput: options.onBuildOutput } : {},
         );
@@ -145,7 +222,7 @@ export async function prepareProject(
     }
   }
 
-  const site = await serveDirectory(await findBuildOutput(root, options.errors));
+  const site = await serveDirectory(await findBuildOutput(application.outputBase, options.errors));
   report(options.labels?.serving(site.origin) ?? `serving ${site.origin}`);
 
   return {

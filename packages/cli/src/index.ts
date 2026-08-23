@@ -11,6 +11,7 @@ async function main(): Promise<number> {
     allowPositionals: true,
     options: {
       project: { type: 'string' },
+      app: { type: 'string' },
       route: { type: 'string', multiple: true },
       'min-score': { type: 'string' },
       // No `default` on any of these: with one, an absent flag and an explicit
@@ -112,6 +113,8 @@ async function main(): Promise<number> {
   // Assigned conditionally: the option type forbids an explicit undefined.
   const project = values.project ?? file.project;
   if (project !== undefined) options.project = project;
+  const app = values.app ?? file.app;
+  if (app !== undefined) options.app = app;
   if (minScore !== undefined) options.minScore = minScore;
   const json = values.json ?? file.json;
   const html = values.html ?? file.html;

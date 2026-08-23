@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { DEFAULT_LANG, messages, parseLang } from './i18n.js';
 import { loadAxeLocale, loadRuleLocale } from './locales.js';
 import { usage } from './usage.js';
@@ -63,6 +64,23 @@ describe('usage text', () => {
 
     for (const option of options) {
       expect(usage('en'), `${option} manque à la version anglaise`).toContain(option);
+    }
+  });
+
+  it('leaves no flag the parser accepts undocumented', () => {
+    // The check above compares the two languages to each other, so an option
+    // missing from both passes it — which is exactly how `--app` shipped
+    // undocumented. This one compares the help to the parser itself.
+    const parser = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+    const declared = [...parser.matchAll(/^ {6}'?([a-z][a-z-]*)'?: \{ type: '(?:string|boolean)'/gm)]
+      .map((match) => `--${match[1]}`)
+      // Negations exist only so parseArgs accepts them; the positive form is
+      // what the help documents.
+      .filter((flag) => !flag.startsWith('--no-'));
+
+    expect(declared.length).toBeGreaterThan(15);
+    for (const flag of declared) {
+      expect(usage('fr'), `${flag} n'est documenté nulle part`).toContain(flag);
     }
   });
 

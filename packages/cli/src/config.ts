@@ -13,6 +13,8 @@ export const CONFIG_FILENAME = 'rgaa.config.json';
  */
 export interface Config {
   project?: string;
+  /** Which application to scan, in a workspace that declares several. */
+  app?: string;
   routes?: string[];
   minScore?: number;
   json?: string;
@@ -47,6 +49,7 @@ const isBoolean: Validator = (v) => typeof v === 'boolean';
 
 const SHAPE: Record<keyof Config, Validator> = {
   project: isString,
+  app: isString,
   routes: (v) => Array.isArray(v) && v.every(isString),
   minScore: (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100,
   json: isString,

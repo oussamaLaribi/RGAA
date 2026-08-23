@@ -88,6 +88,11 @@ export interface Messages {
   noBuildOutput: (path: string) => string;
   noIndexHtml: (path: string) => string;
   buildFailed: string;
+  badWorkspace: (path: string) => string;
+  noApplication: string;
+  unknownApplication: (name: string, available: string[]) => string;
+  ambiguousApplication: (available: string[]) => string;
+  noSourceRoot: (path: string) => string;
   browserLaunch: (channel: string) => string;
   binNotFound: (name: string, path: string) => string;
   guardDirty: (count: number) => string;
@@ -195,6 +200,15 @@ const FR: Messages = {
   noIndexHtml: (p) => `aucun index.html sous ${p}`,
   buildFailed:
     "la compilation du projet a échoué. Vérifiez que « ng build » fonctionne avant d'analyser.",
+  badWorkspace: (p) => `${p} n'est pas un JSON valide.`,
+  noApplication: "angular.json ne déclare aucune application : il n'y a rien à analyser.",
+  unknownApplication: (n, dispo) =>
+    `application « ${n} » inconnue. Celles que déclare angular.json : ${dispo.join(', ')}.`,
+  ambiguousApplication: (dispo) =>
+    `cet espace de travail déclare plusieurs applications : ${dispo.join(', ')}.\n` +
+    "Choisissez celle à analyser avec --app <nom>, plutôt que d'en analyser une au hasard.",
+  noSourceRoot: (p) =>
+    `aucun dossier source en ${p}, alors que angular.json l'y annonce. Le chemin a-t-il changé ?`,
   browserLaunch: (c) =>
     `impossible de lancer ${c}. Installez-le, ou passez --browser chromium après « npx playwright install chromium ».`,
   binNotFound: (n, p) => `${n} introuvable dans ${p}. Les dépendances du projet sont-elles installées ?`,
@@ -290,6 +304,15 @@ const EN: Messages = {
   noBuildOutput: (p) => `no build output at ${p}`,
   noIndexHtml: (p) => `no index.html under ${p}`,
   buildFailed: "the project's own build failed. Check that \"ng build\" works before scanning.",
+  badWorkspace: (p) => `${p} is not valid JSON.`,
+  noApplication: 'angular.json declares no application, so there is nothing to scan.',
+  unknownApplication: (n, available) =>
+    `unknown application "${n}". angular.json declares: ${available.join(', ')}.`,
+  ambiguousApplication: (available) =>
+    `this workspace declares several applications: ${available.join(', ')}.\n` +
+    'Pick the one to scan with --app <name>, rather than having one chosen at random.',
+  noSourceRoot: (p) =>
+    `no source directory at ${p}, though angular.json says there is one. Has the path moved?`,
   browserLaunch: (c) =>
     `could not launch ${c}. Install it, or pass --browser chromium after running "npx playwright install chromium".`,
   binNotFound: (n, p) => `could not find ${n} in ${p}. Are the project's dependencies installed?`,

@@ -94,7 +94,8 @@ hors de portée de tout contrôle automatique.](https://raw.githubusercontent.co
 
 Options principales : `--route` (répétable), `--min-score`, `--json`, `--html`,
 `--grid`, `--baseline`, `--browser`, `--reuse-build`, `--force`, `--verbose`,
-`--violations-only` (plus rapide, mais désactive le score), `--config`,
+`--violations-only` (plus rapide, mais désactive le score), `--app` (quelle
+application, dans un espace de travail qui en déclare plusieurs), `--config`,
 `--no-config`. `rgaa-source --help` les liste toutes.
 
 ### Fichier de configuration

@@ -22,6 +22,8 @@ import {
 export interface CheckOptions {
   urls: string[];
   project?: string;
+  /** Which application to scan, when the workspace declares several. */
+  app?: string;
   routes: string[];
   minScore?: number;
   fail: boolean;
@@ -174,7 +176,14 @@ export async function check(options: CheckOptions): Promise<ExitCode> {
           noBuildOutput: t.noBuildOutput,
           noIndexHtml: t.noIndexHtml,
           buildFailed: t.buildFailed,
+          badWorkspace: t.badWorkspace,
+          noApplication: t.noApplication,
+          unknownApplication: t.unknownApplication,
+          ambiguousApplication: t.ambiguousApplication,
+          noSourceRoot: t.noSourceRoot,
         },
+        // Assigned conditionally: the option type forbids an explicit undefined.
+        ...(options.app !== undefined ? { app: options.app } : {}),
         // The build is the long step and says plenty while it works; --verbose
         // lets it through so a slow project can be diagnosed rather than guessed at.
         ...(options.verbose
