@@ -5,7 +5,7 @@ import { prepareProject } from '../drivers/angular-project.js';
 import { formatConsoleReport } from '../reporters/console.js';
 import { formatFixReport } from '../reporters/fix.js';
 import { planFixes, writePlan, type FixLevel } from '@rgaa-source/fix';
-import { parseTemplateElements } from '@rgaa-source/angular';
+import { parseSourceFile } from '@rgaa-source/angular';
 import { assertRecoverable } from '../drivers/git.js';
 import { formatRegressionReport } from '../reporters/regression.js';
 import { createProgress } from '../reporters/progress.js';
@@ -74,7 +74,7 @@ async function applyFixes(
     projectRoot: options.project,
     // The composition root is where the framework is chosen; everything below
     // works on offsets and attributes and never learns which one it was.
-    parse: parseTemplateElements,
+    parse: parseSourceFile,
     options: { levels },
   });
 
