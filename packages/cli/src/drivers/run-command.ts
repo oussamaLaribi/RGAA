@@ -22,14 +22,20 @@ export interface CommandResult {
  * benefit of using the version of the tool the project itself depends on rather
  * than whatever `npx` decides to fetch.
  */
-export function resolveProjectBin(projectRoot: string, specifier: string): string {
+export function resolveProjectBin(
+  projectRoot: string,
+  specifier: string,
+  /** Wording, so this resolver names no language of its own. */
+  notFound?: (name: string, path: string) => string,
+): string {
   const fromProject = createRequire(join(projectRoot, 'package.json'));
 
   try {
     return fromProject.resolve(specifier);
   } catch {
     throw new Error(
-      `could not find ${specifier} in ${projectRoot}. Is the project's dependencies installed?`,
+      notFound?.(specifier, projectRoot) ??
+        `could not find ${specifier} in ${projectRoot}. Are the project's dependencies installed?`,
     );
   }
 }

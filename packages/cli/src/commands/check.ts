@@ -181,6 +181,7 @@ export async function check(options: CheckOptions): Promise<ExitCode> {
           unknownApplication: t.unknownApplication,
           ambiguousApplication: t.ambiguousApplication,
           noSourceRoot: t.noSourceRoot,
+          binNotFound: t.binNotFound,
         },
         // Assigned conditionally: the option type forbids an explicit undefined.
         ...(options.app !== undefined ? { app: options.app } : {}),

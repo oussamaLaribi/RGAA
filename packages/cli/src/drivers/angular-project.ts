@@ -197,6 +197,7 @@ export interface PrepareOptions {
     unknownApplication: (name: string, available: string[]) => string;
     ambiguousApplication: (available: string[]) => string;
     noSourceRoot: (path: string) => string;
+    binNotFound: (name: string, path: string) => string;
   };
   /** Echo the build output as it arrives. */
   onBuildOutput?: (chunk: string) => void;
@@ -262,8 +263,8 @@ export async function prepareProject(
       // but only when @nx/angular installed it, so relying on it would work on
       // some Nx projects and fail on others for no reason the user can see.
       const cli = isNxWorkspace
-        ? resolveProjectBin(root, 'nx/bin/nx.js')
-        : resolveProjectBin(root, '@angular/cli/bin/ng.js');
+        ? resolveProjectBin(root, 'nx/bin/nx.js', options.errors?.binNotFound)
+        : resolveProjectBin(root, '@angular/cli/bin/ng.js', options.errors?.binNotFound);
 
       // Name the application: in a workspace with several, a bare `build`
       // either picks the default or refuses, and neither is what was asked for.
